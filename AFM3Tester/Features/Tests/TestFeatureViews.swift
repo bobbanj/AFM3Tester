@@ -462,9 +462,7 @@ struct ExportView: View {
     var body: some View {
         NavigationStack {
             DiagnosticScrollScreen {
-                Toggle("Include prompt text in export", isOn: $store.includePromptsInExport)
-
-                Text("Sensitive patterns (emails, phones, API keys) are redacted automatically.")
+                Text("Prompt text is not collected or exported. Sensitive patterns in diagnostic fields (emails, phones, and API keys) are redacted automatically.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

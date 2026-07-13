@@ -19,6 +19,9 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.xcarchive
+*.xcresult
+*.xctestrun
 
 # Swift Package Manager
 .swiftpm/
@@ -54,6 +57,7 @@ AFM3Tester-Report*.json
 AFM3Tester-Report*.md
 
 # Temporary screenshots (source-controlled docs live under docs/screenshots/)
+/screenshots/
 screenshots/tmp/
 *.screenshot.png
 

@@ -1,6 +1,6 @@
 # Screenshots
 
-AFM3Tester does not require screenshots to build or run. They are optional documentation assets for the GitHub README and future release notes.
+AFM3Tester does not require screenshots to build or run. The repository includes manually reviewed physical-device screenshots as optional documentation assets for the GitHub README and future release notes.
 
 ## Directory
 
@@ -19,9 +19,11 @@ Recommended filenames:
 | `structured-output.png` | Structured output validation results |
 | `tool-calling.png` | Tool invocation log |
 | `conversation-memory.png` | Memory test transcript and checks |
-| `multilingual.png` | Multilingual results and manual ratings |
+| `multilingual-results.png` | Multilingual results and manual ratings |
 | `concurrency.png` | Concurrency test summary |
 | `offline-test.png` | Offline instructions and network-path status |
+| `benchmark.png` | Three performance benchmark repetitions |
+| `safety-observation.png` | Behavioral safety observations and application-level tool gating |
 | `error-explorer.png` | Error Explorer with reflected error detail |
 
 Only commit screenshots after redaction review.

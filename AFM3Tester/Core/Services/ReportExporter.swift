@@ -22,14 +22,14 @@ enum ReportExporter: Sendable {
             errors: store.errorLog,
             offlineTestSucceeded: store.testResults["Offline Verification"]?.outcome == .passed,
             offlineEvidenceRecords: store.offlineEvidenceRecords,
-            includePromptText: store.includePromptsInExport,
-            promptContents: store.includePromptsInExport ? nil : nil
+            includePromptText: false,
+            promptContents: nil
         )
     }
 
     @MainActor
     static func exportJSON(report: DiagnosticReport) -> Data {
-        let redacted = report.includePromptText ? report : ReportRedactor.redactDiagnosticReport(report)
+        let redacted = ReportRedactor.redactDiagnosticReport(report)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -43,7 +43,7 @@ enum ReportExporter: Sendable {
     }
 
     nonisolated static func exportMarkdown(report: DiagnosticReport) -> String {
-        let redacted = report.includePromptText ? report : ReportRedactor.redactDiagnosticReport(report)
+        let redacted = ReportRedactor.redactDiagnosticReport(report)
         var lines: [String] = []
 
         lines.append("# AFM3Tester Diagnostic Report")
@@ -157,10 +157,8 @@ enum ReportExporter: Sendable {
             }
         }
 
-        if !redacted.includePromptText {
-            lines.append("")
-            lines.append("_Prompt text excluded from export. Enable \"Include prompt text in export\" to include._")
-        }
+        lines.append("")
+        lines.append("_Prompt text is not collected or exported by this developer preview._")
 
         return lines.joined(separator: "\n")
     }

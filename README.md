@@ -1,12 +1,12 @@
 # AFM3Tester
 
-**AFM3Tester — Apple Foundation Models Diagnostic Suite**
+**AFM3Tester — Foundation Models diagnostics for SwiftUI developers**
 
 AFM3Tester is an open-source SwiftUI diagnostic and capability test suite for Apple’s public **FoundationModels** framework on supported physical iPhones running iOS 27.
 
 It helps developers observe on-device model availability, run structured diagnostics, inspect errors faithfully, and export redacted reports — without third-party SDKs, network-backed model providers, analytics, or telemetry.
 
-> **Observed result:** Verified on a physical iPhone in Sweden running iOS 27 beta: `SystemLanguageModel.default` was **Available** and executed **on-device**. This is a recorded test observation, not a universal guarantee for all devices, regions, or future OS builds.
+> **Observed result:** On one iPhone 17 Pro Max in Sweden running iOS 27 Developer Beta 3, `SystemLanguageModel.default` reported **Available**, deployment was observed as **on-device**, and basic text generation succeeded. This is a beta-software observation, not a universal guarantee for other devices, regions, locales, builds, or releases.
 
 ## What it tests
 
@@ -37,9 +37,7 @@ See [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md) for the full matrix.
 
 ## Why this project exists
 
-Early reporting around Siri AI and Apple Intelligence availability in the EU created uncertainty about whether the public **FoundationModels** developer framework — and AFM3-class on-device models — would actually be usable on EU iPhones at the developer API layer.
-
-AFM3Tester was built to test the **public APIs on physical hardware** and record what really happens: availability state, context limits, inference behavior, tool calls, memory, exports, and policy enforcement in the app itself.
+AFM3Tester was built to exercise the public **FoundationModels** APIs on physical hardware and record observed availability, context limits, inference behavior, tool calls, memory, exports, and application-level policy enforcement.
 
 This project reports observations. It does not predict future OS behavior, and it does not claim every EU device or release will behave identically.
 
@@ -49,8 +47,8 @@ These values come from a captured physical-device run documented in [docs/OBSERV
 
 | Field | Observed value |
 | --- | --- |
-| Device | iPhone18,2 |
-| OS | iOS 27 beta |
+| Device | iPhone 17 Pro Max (`iPhone18,2`) |
+| OS | iOS 27 Developer Beta 3 |
 | Build observed | 24A5380h |
 | Model | `SystemLanguageModel.default` |
 | Reported framework description observed | AFM 3 Core Advanced (framework/runtime observation; not a stable public API identifier) |
@@ -64,11 +62,17 @@ Beta behavior, model descriptions, context limits, and availability may change w
 
 ## Screenshots
 
-No screenshots are included in the initial repository.
+These physical-device screenshots were manually reviewed for device names, Apple IDs, team IDs, personal bundle IDs, notification content, email addresses, phone numbers, serial numbers, and UDIDs. The PNG files contain image data only and no text or ancillary metadata chunks.
 
-Maintainers can add redacted images under [docs/screenshots/](docs/screenshots/). See [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) for naming conventions and redaction requirements.
+| Offline-path observation | Concurrency observation |
+| --- | --- |
+| <img src="docs/screenshots/offline-test.png" alt="Offline test showing no satisfied network path and three successful checks" width="280"> | <img src="docs/screenshots/concurrency.png" alt="Concurrency test showing nine successful requests and no failures" width="280"> |
 
-The README intentionally avoids image links until those files exist, so there are no broken image references.
+| Benchmark observation | Safety behavior observation | Multilingual observation |
+| --- | --- | --- |
+| <img src="docs/screenshots/benchmark.png" alt="Three physical-device performance benchmark repetitions" width="240"> | <img src="docs/screenshots/safety-observation.png" alt="Behavioral safety observations and application-level tool gating" width="240"> | <img src="docs/screenshots/multilingual-results.png" alt="Multilingual generation observations and manual rating controls" width="240"> |
+
+See [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md) for filenames and the publication redaction checklist.
 
 ## Requirements
 
@@ -201,7 +205,7 @@ Important:
 - Disable Wi‑Fi as well if it remains active.
 - Wait for the app to show an offline / no satisfied path state before running the offline suite.
 
-Offline verification has **not** yet been recorded as passed in [docs/OBSERVED_RESULTS.md](docs/OBSERVED_RESULTS.md).
+In the captured physical-device observation, the app reported **Offline (no satisfied path)** and basic generation, structured output, and memory checks succeeded. This establishes only that those tested paths succeeded while the app observed no satisfied network path; it is not absolute proof of all framework or OS behavior. See [docs/OBSERVED_RESULTS.md](docs/OBSERVED_RESULTS.md).
 
 ## Privacy
 
@@ -210,8 +214,8 @@ AFM3Tester is designed for local diagnostics:
 - No analytics
 - No telemetry
 - No third-party SDKs
-- No prompts exported by default
-- Diagnostic exports exclude prompt text unless you explicitly enable **Include prompt text in export**
+- Prompt text is not collected or exported by this developer preview
+- Diagnostic fields are redacted before JSON and Markdown export
 - Redaction attempts to remove email addresses, phone numbers, API keys, tokens, and passwords
 
 You should still inspect reports before publishing them. Model output and errors may contain sensitive text.

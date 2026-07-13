@@ -73,4 +73,42 @@ final class ReportRedactorTests: XCTestCase {
         XCTAssertFalse(encoded.contains("555-987-6543"))
         XCTAssertFalse(encoded.contains("sk-abcdefghijklmnopqrstuvwxyz123456"))
     }
+
+    func testExporterAlwaysRedactsLegacyPromptOptInReports() {
+        let report = DiagnosticReport(
+            appVersion: "1.0",
+            device: DeviceSnapshot(
+                osVersion: "27.0",
+                osBuild: "test",
+                deviceModel: "iPhone",
+                localeIdentifier: "en_US",
+                languageCode: "en",
+                regionCode: "US",
+                thermalState: "nominal",
+                batteryLevel: nil,
+                isLowPowerModeEnabled: false,
+                isCharging: false,
+                isSimulator: true
+            ),
+            modelAvailability: "Available",
+            modelDescription: "SystemLanguageModel.default",
+            errors: [
+                ErrorLogEntry(
+                    testName: "Legacy export",
+                    availabilityState: "Available",
+                    localizedDescription: "Email user@example.com leaked",
+                    debugDescription: "api_key=sk-abcdefghijklmnopqrstuvwxyz123456",
+                    category: .unknown
+                )
+            ],
+            includePromptText: true,
+            promptContents: ["Private prompt from a legacy report"]
+        )
+
+        let encoded = String(data: ReportExporter.exportJSON(report: report), encoding: .utf8) ?? ""
+
+        XCTAssertFalse(encoded.contains("user@example.com"))
+        XCTAssertFalse(encoded.contains("sk-abcdefghijklmnopqrstuvwxyz123456"))
+        XCTAssertFalse(encoded.contains("Private prompt from a legacy report"))
+    }
 }

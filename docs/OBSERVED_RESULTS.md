@@ -2,12 +2,27 @@
 
 This document records **observed** results from beta software on a specific device and environment. These results are not universal guarantees and may change with OS builds, device hardware, locale, region, asset downloads, or framework updates.
 
-## Test environment
+## Observed physical-device result
+
+Observed on:
+
+- Device: iPhone 17 Pro Max
+- Region: Sweden
+- OS: iOS 27 Developer Beta 3
+- Framework: FoundationModels
+- Model API: `SystemLanguageModel.default`
+- Availability reported by framework: Available
+- Deployment observed by the test app: On-device
+- Basic text generation: Succeeded
+
+This is a beta-software observation on one device and build. It does not establish availability across all EU countries, devices, locales, or future releases.
+
+## Captured environment details
 
 | Field | Observed value |
 | --- | --- |
-| Device | iPhone18,2 |
-| OS | iOS 27.0 beta |
+| Device | iPhone 17 Pro Max (`iPhone18,2`) |
+| OS | iOS 27 Developer Beta 3 |
 | Build | 24A5380h |
 | Region of physical testing | Sweden |
 | App locale captured | en_US |
@@ -39,6 +54,7 @@ This document records **observed** results from beta software on a specific devi
 | Conservative concurrency suite | 9 succeeded, 0 failed |
 | Thermal state during short concurrency test | Remained nominal |
 | Prompt-injection observation | Quoted instruction caused a side-effect tool-call attempt; application policy blocked the side effect |
+| Offline-path observation | App reported no satisfied network path; basic generation, structured output, and memory checks succeeded |
 
 ## Simulator observation
 
@@ -50,13 +66,11 @@ InferenceError::operationNotAllowed::Simulator is not supported
 
 This matches the project’s documented expectation that simulator inference is unsupported.
 
-## Not observed in the captured run
+## Offline-path observation
 
-The following were **not** recorded as passed in the captured evidence set used for this document:
+During the captured run, Airplane Mode was shown as enabled, the app reported `Offline (no satisfied path)`, and the offline suite recorded successful basic generation, structured output, and memory checks. This is evidence about those tested paths at that moment. It does not prove that every framework or OS path is always offline.
 
-- Offline verification with Airplane Mode and no satisfied network path
-
-If you perform offline verification successfully, consider adding a redacted entry here with device, build, and network-path status.
+See [screenshots/offline-test.png](screenshots/offline-test.png).
 
 ## Interpretation notes
 

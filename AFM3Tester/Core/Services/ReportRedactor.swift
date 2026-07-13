@@ -37,8 +37,8 @@ enum ReportRedactor: Sendable {
             errors: report.errors.map(redactErrorEntry),
             offlineTestSucceeded: report.offlineTestSucceeded,
             offlineEvidenceRecords: report.offlineEvidenceRecords,
-            includePromptText: report.includePromptText,
-            promptContents: report.promptContents?.map(redact)
+            includePromptText: false,
+            promptContents: nil
         )
     }
 

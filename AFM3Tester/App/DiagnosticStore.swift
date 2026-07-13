@@ -10,7 +10,6 @@ final class DiagnosticStore: DiagnosticRecording {
     var testResults: [String: TestResult] = [:]
     var benchmarks: [BenchmarkSample] = []
     var lastSuccessfulInference: Date?
-    var includePromptsInExport = false
     var demoTheme: ColorScheme?
     var allowSideEffectTools = false
     var toolInvocationLog: [ToolInvocationRecord] = []
