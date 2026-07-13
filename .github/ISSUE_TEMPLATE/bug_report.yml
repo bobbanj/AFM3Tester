@@ -1,0 +1,126 @@
+name: Bug report
+description: Report a reproducible issue in AFM3Tester
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue. Please do **not** include private prompts, credentials, tokens, personal data, or full diagnostic exports unless you have redacted them.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: device_model
+    attributes:
+      label: Device model identifier
+      placeholder: e.g. iPhone18,2
+    validations:
+      required: true
+
+  - type: input
+    id: ios_version
+    attributes:
+      label: iOS version
+      placeholder: e.g. 27.0 beta
+    validations:
+      required: true
+
+  - type: input
+    id: ios_build
+    attributes:
+      label: iOS build
+      placeholder: e.g. 24A5380h
+
+  - type: input
+    id: xcode_version
+    attributes:
+      label: Xcode version
+      placeholder: e.g. Xcode 27 beta
+    validations:
+      required: true
+
+  - type: input
+    id: locale
+    attributes:
+      label: Locale
+      placeholder: e.g. en_US
+
+  - type: input
+    id: region
+    attributes:
+      label: Region
+      placeholder: e.g. Sweden
+
+  - type: input
+    id: model_availability
+    attributes:
+      label: Model availability
+      placeholder: e.g. Available / model not ready
+
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime environment
+      options:
+        - Physical device
+        - iOS Simulator
+    validations:
+      required: true
+
+  - type: input
+    id: network_state
+    attributes:
+      label: Network state during test
+
+  - type: input
+    id: charging_state
+    attributes:
+      label: Charging state
+
+  - type: input
+    id: low_power_mode
+    attributes:
+      label: Low Power Mode
+
+  - type: input
+    id: thermal_state
+    attributes:
+      label: Thermal state
+
+  - type: textarea
+    id: reflected_error
+    attributes:
+      label: Exact reflected error
+      description: Paste the full String(reflecting:) output from Error Explorer when available.
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true

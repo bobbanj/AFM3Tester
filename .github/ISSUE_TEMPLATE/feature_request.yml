@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a diagnostic feature for AFM3Tester
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposals involving private APIs, hidden network services, analytics, or third-party model providers will not be accepted.
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: What diagnostic question should this help answer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_behavior
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostic_fit
+    attributes:
+      label: Why it belongs in a diagnostic suite
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Implementation requirements
+      options:
+        - label: Requires a new entitlement
+        - label: Requires a new dependency
+        - label: Requires a network call
+        - label: Requires a private or undocumented API
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

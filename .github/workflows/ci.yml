@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select newest available Xcode
+        run: |
+          set -euo pipefail
+          if [ -d "/Applications/Xcode_27.0.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_27.0.app
+          elif [ -d "/Applications/Xcode_27.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_27.app
+          elif [ -d "/Applications/Xcode.app" ]; then
+            sudo xcode-select -s /Applications/Xcode.app
+          else
+            echo "No supported Xcode installation found."
+            exit 1
+          fi
+          xcodebuild -version
+          swift --version
+          xcrun --sdk iphonesimulator --show-sdk-version
+
+      - name: Build app for iOS Simulator
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project AFM3Tester.xcodeproj \
+            -scheme AFM3Tester \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            build
+
+      - name: Build for testing
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project AFM3Tester.xcodeproj \
+            -scheme AFM3Tester \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            build-for-testing
+
+      - name: Run AFM3TesterTests
+        run: |
+          set -euo pipefail
+          XCTESTRUN=$(ls Build/Products/*.xctestrun 2>/dev/null || ls ~/Library/Developer/Xcode/DerivedData/*/Build/Products/*.xctestrun | head -1)
+          if [ -z "${XCTESTRUN}" ]; then
+            XCTESTRUN=$(find ~/Library/Developer/Xcode/DerivedData -name '*.xctestrun' -path '*AFM3Tester*' | head -1)
+          fi
+          if [ -z "${XCTESTRUN}" ]; then
+            echo "Could not locate .xctestrun file after build-for-testing."
+            exit 1
+          fi
+          xcodebuild \
+            test-without-building \
+            -xctestrun "${XCTESTRUN}" \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -parallel-testing-enabled NO
+
+      - name: CI limitation note
+        if: always()
+        run: |
+          cat <<'EOF'
+          CI validates compilation and deterministic XCTest logic only.
+          Hosted GitHub Actions simulators cannot execute Foundation Models on-device inference.
+          Physical-device inference, Apple Intelligence asset readiness, and offline-path evidence require manual testing on supported hardware.
+          If the runner Xcode/iOS SDK is older than iOS 27, this workflow may fail until GitHub provides a compatible macOS/Xcode image.
+          EOF

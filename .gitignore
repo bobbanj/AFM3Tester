@@ -1,0 +1,70 @@
+# Xcode
+DerivedData/
+build/
+.build/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+xcuserdata/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Secrets and signing artifacts
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.cer
+*.certSigningRequest
+*.pem
+*.key
+.env
+.env.*
+secrets/
+credentials/
+
+# Local exports and temporary diagnostics
+exports/
+reports/
+*.diagnostic.json
+*.diagnostic.md
+AFM3Tester-Report*.json
+AFM3Tester-Report*.md
+
+# Temporary screenshots (source-controlled docs live under docs/screenshots/)
+screenshots/tmp/
+*.screenshot.png
+
+# Editor and tooling
+.idea/
+*.swp
+*~
+.vscode/
+
+# Fastlane / CI artifacts (if added later)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
