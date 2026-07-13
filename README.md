@@ -98,7 +98,7 @@ You do not need a paid Apple Developer Program membership to inspect UI in Simul
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/<your-org>/AFM3Tester.git
+   git clone https://github.com/bobbanj/AFM3Tester.git
    cd AFM3Tester
    ```
 
