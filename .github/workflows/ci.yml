@@ -4,74 +4,573 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    runs-on: macos-latest
+  repository_validation:
+    name: Stage A · Repository validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      status: ${{ steps.result.outputs.status }}
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Select newest available Xcode
+      - name: Validate Git hygiene
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -d "/Applications/Xcode_27.0.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_27.0.app
-          elif [ -d "/Applications/Xcode_27.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_27.app
-          elif [ -d "/Applications/Xcode.app" ]; then
-            sudo xcode-select -s /Applications/Xcode.app
-          else
-            echo "No supported Xcode installation found."
+          echo "::group::Tracked-file hygiene"
+
+          deleted="$(git ls-files --deleted)"
+          if [[ -n "$deleted" ]]; then
+            echo "Tracked files are missing from the checkout:"
+            printf '%s\n' "$deleted"
             exit 1
           fi
-          xcodebuild -version
-          swift --version
-          xcrun --sdk iphonesimulator --show-sdk-version
 
-      - name: Build app for iOS Simulator
+          ignored="$(git ls-files -ci --exclude-standard)"
+          if [[ -n "$ignored" ]]; then
+            echo "Ignored files are tracked:"
+            printf '%s\n' "$ignored"
+            exit 1
+          fi
+
+          forbidden="$(git ls-files | grep -E '(^|/)(DerivedData|xcuserdata)(/|$)|(^|/)\.DS_Store$|\.(xcuserstate|mobileprovision|provisionprofile|p12|pem|key|xcarchive|xcresult)$' || true)"
+          if [[ -n "$forbidden" ]]; then
+            echo "Generated, user-specific, or signing files are tracked:"
+            printf '%s\n' "$forbidden"
+            exit 1
+          fi
+
+          echo "Tracked-file hygiene passed."
+          echo "::endgroup::"
+
+      - name: Validate formatting
+        shell: bash
         run: |
           set -euo pipefail
+          echo "::group::Whitespace validation"
+
+          trailing_whitespace="$(git grep -nI -E '[[:blank:]]+$' -- . || true)"
+          if [[ -n "$trailing_whitespace" ]]; then
+            echo "Trailing whitespace found:"
+            printf '%s\n' "$trailing_whitespace"
+            exit 1
+          fi
+
+          git diff --check
+          echo "Formatting validation passed."
+          echo "::endgroup::"
+
+      - name: Validate Xcode project integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "::group::Project and scheme validation"
+          python3 <<'PYTHON'
+          from pathlib import Path
+          import re
+          import subprocess
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = Path.cwd()
+          project = root / "AFM3Tester.xcodeproj" / "project.pbxproj"
+          scheme = root / "AFM3Tester.xcodeproj" / "xcshareddata" / "xcschemes" / "AFM3Tester.xcscheme"
+
+          required = [
+              project,
+              scheme,
+              root / "LICENSE",
+              root / "README.md",
+              root / "SECURITY.md",
+              root / "CONTRIBUTING.md",
+              root / "CODE_OF_CONDUCT.md",
+              root / "CHANGELOG.md",
+              root / ".github" / "workflows" / "ci.yml",
+              root / "AFM3Tester" / "Assets.xcassets" / "Contents.json",
+          ]
+          missing = [str(path.relative_to(root)) for path in required if not path.exists()]
+          if missing:
+              raise SystemExit("Missing required files: " + ", ".join(missing))
+
+          tracked = subprocess.check_output(
+              ["git", "ls-files", "-z"], text=True
+          ).split("\0")
+          tracked = [path for path in tracked if path]
+          by_casefold = {}
+          for path in tracked:
+              by_casefold.setdefault(path.casefold(), []).append(path)
+          collisions = [paths for paths in by_casefold.values() if len(paths) > 1]
+          if collisions:
+              rendered = "; ".join(" <> ".join(paths) for paths in collisions)
+              raise SystemExit("Case-insensitive path collisions: " + rendered)
+
+          text = project.read_text(encoding="utf-8")
+          app_sources = sorted((root / "AFM3Tester").rglob("*.swift"))
+          test_sources = sorted((root / "AFM3TesterTests").rglob("*.swift"))
+          sources = app_sources + test_sources
+
+          names = [path.name for path in sources]
+          if len(names) != len(set(names)):
+              raise SystemExit("Swift source basenames must be unique for integrity validation.")
+
+          for source in sources:
+              filename = re.escape(source.name)
+              reference = rf"\b[A-Z0-9]+ /\* {filename} \*/ = \{{isa = PBXFileReference"
+              membership = rf"/\* {filename} in Sources \*/"
+              if not re.search(reference, text):
+                  raise SystemExit(f"Missing PBXFileReference for {source.relative_to(root)}")
+              if not re.search(membership, text):
+                  raise SystemExit(f"Source is not in a Sources phase: {source.relative_to(root)}")
+
+          for match in re.finditer(r"\bpath = (?P<quote>\"?)(?P<path>[^;\"]+)\1;", text):
+              path = match.group("path").strip()
+              if path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", path) or ".." in Path(path).parts:
+                  raise SystemExit(f"Unsafe Xcode file reference: {path}")
+
+          tree = ET.parse(scheme)
+          test_names = {
+              element.attrib.get("BlueprintName")
+              for element in tree.findall(".//TestAction//BuildableReference")
+          }
+          if "AFM3TesterTests" not in test_names:
+              raise SystemExit("Shared scheme does not include AFM3TesterTests.")
+
+          print(f"Validated {len(app_sources)} app sources and {len(test_sources)} test sources.")
+          print("Shared scheme includes AFM3TesterTests.")
+          print("No unsafe project paths or case collisions found.")
+          PYTHON
+          echo "::endgroup::"
+
+      - name: Record repository-validation result
+        id: result
+        run: echo "status=passed" >> "$GITHUB_OUTPUT"
+
+  swift_validation:
+    name: Stage B · Swift and XCTest validation
+    needs: repository_validation
+    runs-on: macos-latest
+    timeout-minutes: 30
+    outputs:
+      sdk_compatible: ${{ steps.apple.outputs.sdk_compatible }}
+      reason: ${{ steps.apple.outputs.reason }}
+      simulator_build: ${{ steps.status.outputs.simulator_build }}
+      swift_tests: ${{ steps.status.outputs.swift_tests }}
+      xcode_version: ${{ steps.apple.outputs.xcode_version }}
+      swift_version: ${{ steps.apple.outputs.swift_version }}
+      sdk_version: ${{ steps.apple.outputs.sdk_version }}
+      runtime_version: ${{ steps.apple.outputs.runtime_version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Detect Xcode, SDK, and simulator capabilities
+        id: apple
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "::group::Installed Apple tooling"
+
+          deployment_target="$(awk -F'= ' '/IPHONEOS_DEPLOYMENT_TARGET =/{gsub(/;/, "", $2); print $2; exit}' AFM3Tester.xcodeproj/project.pbxproj)"
+          if [[ -z "$deployment_target" ]]; then
+            echo "Unable to determine IPHONEOS_DEPLOYMENT_TARGET from the project."
+            exit 1
+          fi
+
+          version_greater_than() {
+            awk -v candidate="$1" -v current="$2" 'BEGIN {
+              split(candidate, a, "."); split(current, b, ".");
+              for (i = 1; i <= 4; i++) {
+                av = (a[i] == "" ? 0 : a[i]) + 0;
+                bv = (b[i] == "" ? 0 : b[i]) + 0;
+                if (av > bv) exit 0;
+                if (av < bv) exit 1;
+              }
+              exit 1;
+            }'
+          }
+
+          version_at_least() {
+            awk -v installed="$1" -v required="$2" 'BEGIN {
+              split(installed, a, "."); split(required, b, ".");
+              for (i = 1; i <= 4; i++) {
+                av = (a[i] == "" ? 0 : a[i]) + 0;
+                bv = (b[i] == "" ? 0 : b[i]) + 0;
+                if (av > bv) exit 0;
+                if (av < bv) exit 1;
+              }
+              exit 0;
+            }'
+          }
+
+          selected_developer_dir=""
+          selected_version="0"
+          shopt -s nullglob
+          for app in /Applications/Xcode*.app; do
+            developer_dir="$app/Contents/Developer"
+            [[ -x "$developer_dir/usr/bin/xcodebuild" ]] || continue
+            if ! version="$(DEVELOPER_DIR="$developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"; then
+              echo "::warning::Ignoring unusable Xcode installation at $app."
+              continue
+            fi
+            [[ -n "$version" ]] || continue
+            echo "Found Xcode $version at $app"
+            if [[ -z "$selected_developer_dir" ]] || version_greater_than "$version" "$selected_version"; then
+              selected_developer_dir="$developer_dir"
+              selected_version="$version"
+            fi
+          done
+
+          if [[ -z "$selected_developer_dir" ]] && command -v xcodebuild >/dev/null 2>&1; then
+            selected_developer_dir="$(xcode-select -p)"
+            selected_version="$(DEVELOPER_DIR="$selected_developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}' || true)"
+            if [[ -z "$selected_version" ]]; then
+              selected_developer_dir=""
+            fi
+          fi
+
+          if [[ -z "$selected_developer_dir" ]]; then
+            echo "sdk_compatible=false" >> "$GITHUB_OUTPUT"
+            echo "reason=No Xcode installation is available on the hosted runner." >> "$GITHUB_OUTPUT"
+            echo "xcode_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "swift_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "sdk_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "runtime_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "has_simulator=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No Xcode installation is available; Swift validation is skipped."
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          echo "DEVELOPER_DIR=$selected_developer_dir" >> "$GITHUB_ENV"
+          xcode_version="$(DEVELOPER_DIR="$selected_developer_dir" xcodebuild -version | paste -sd ' ' -)"
+          if ! swift_version="$(DEVELOPER_DIR="$selected_developer_dir" xcrun swift --version 2>/dev/null | head -1)"; then
+            echo "sdk_compatible=false" >> "$GITHUB_OUTPUT"
+            echo "reason=The selected Xcode installation has no usable Swift compiler." >> "$GITHUB_OUTPUT"
+            echo "xcode_version=$xcode_version" >> "$GITHUB_OUTPUT"
+            echo "swift_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "sdk_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "runtime_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "has_simulator=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The selected Xcode installation has no usable Swift compiler; Swift validation is skipped."
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          if ! sdk_version="$(DEVELOPER_DIR="$selected_developer_dir" xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null)"; then
+            echo "sdk_compatible=false" >> "$GITHUB_OUTPUT"
+            echo "reason=The selected Xcode installation has no iOS Simulator SDK." >> "$GITHUB_OUTPUT"
+            echo "xcode_version=$xcode_version" >> "$GITHUB_OUTPUT"
+            echo "swift_version=$swift_version" >> "$GITHUB_OUTPUT"
+            echo "sdk_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "runtime_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "has_simulator=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The selected Xcode installation has no iOS Simulator SDK; Swift validation is skipped."
+            echo "::endgroup::"
+            exit 0
+          fi
+
+          if ! sdk_path="$(DEVELOPER_DIR="$selected_developer_dir" xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)"; then
+            echo "sdk_compatible=false" >> "$GITHUB_OUTPUT"
+            echo "reason=The selected Xcode installation cannot resolve its iOS Simulator SDK path." >> "$GITHUB_OUTPUT"
+            echo "xcode_version=$xcode_version" >> "$GITHUB_OUTPUT"
+            echo "swift_version=$swift_version" >> "$GITHUB_OUTPUT"
+            echo "sdk_version=$sdk_version" >> "$GITHUB_OUTPUT"
+            echo "runtime_version=unavailable" >> "$GITHUB_OUTPUT"
+            echo "has_simulator=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::The simulator SDK path cannot be resolved; Swift validation is skipped."
+            echo "::endgroup::"
+            exit 0
+          fi
+          framework_path="$sdk_path/System/Library/Frameworks/FoundationModels.framework"
+          compatible=true
+          reason="Compatible simulator SDK and FoundationModels framework are available."
+
+          if ! version_at_least "$sdk_version" "$deployment_target"; then
+            compatible=false
+            reason="Runner simulator SDK $sdk_version is older than project deployment target $deployment_target."
+          elif [[ ! -d "$framework_path" ]]; then
+            compatible=false
+            reason="Runner simulator SDK $sdk_version does not contain FoundationModels.framework."
+          fi
+
+          echo "Selected: $xcode_version"
+          echo "Swift: $swift_version"
+          echo "Simulator SDK: $sdk_version"
+          echo "Project deployment target: $deployment_target"
+          echo "FoundationModels framework: $framework_path"
+
+          simulator_id=""
+          simulator_name=""
+          runtime_version="unavailable"
+          devices_json="$RUNNER_TEMP/available-simulators.json"
+
+          if DEVELOPER_DIR="$selected_developer_dir" xcrun simctl list runtimes available \
+            && DEVELOPER_DIR="$selected_developer_dir" xcrun simctl list devices available \
+            && DEVELOPER_DIR="$selected_developer_dir" xcrun simctl list --json devices available > "$devices_json"; then
+            if [[ "$compatible" == "true" ]]; then
+              if ! command -v ruby >/dev/null 2>&1; then
+                echo "::warning::Ruby is unavailable, so no simulator can be selected from the discovered runtimes. XCTest execution will be skipped."
+              elif selection="$(TARGET_DEPLOYMENT="$deployment_target" DEVICES_JSON="$devices_json" ruby <<'RUBY'
+          require "json"
+
+          def version_parts(version)
+            version.split(".").map(&:to_i)
+          end
+
+          def at_least?(candidate, required)
+            length = [candidate.length, required.length].max
+            candidate = candidate + [0] * (length - candidate.length)
+            required = required + [0] * (length - required.length)
+            candidate.zip(required).each do |left, right|
+              return true if left > right
+              return false if left < right
+            end
+            true
+          end
+
+          data = JSON.parse(File.read(ENV.fetch("DEVICES_JSON"))).fetch("devices", {})
+          required = version_parts(ENV.fetch("TARGET_DEPLOYMENT"))
+          choices = []
+
+          data.each do |runtime, devices|
+            match = runtime.match(/\.iOS-(\d+(?:-\d+)*)$/)
+            next unless match
+            version = match[1].tr("-", ".")
+            parts = version_parts(version)
+            next unless at_least?(parts, required)
+
+            devices.each do |device|
+              next if device.key?("isAvailable") && !device["isAvailable"]
+              choices << [parts, version, device.fetch("name"), device.fetch("udid")]
+            end
+          end
+
+          choice = choices.max_by { |parts, _version, _name, _udid| parts }
+          puts choice[1..].join("\t") if choice
+          RUBY
+              )"; then
+                if [[ -n "$selection" ]]; then
+                  IFS=$'\t' read -r runtime_version simulator_name simulator_id <<< "$selection"
+                fi
+              else
+                echo "::warning::Simulator metadata could not be parsed. XCTest execution will be skipped."
+              fi
+            fi
+          else
+            echo "::warning::Simulator runtime discovery is unavailable on this runner. XCTest execution will be skipped."
+          fi
+
+          has_simulator=false
+          if [[ -n "$simulator_id" ]]; then
+            has_simulator=true
+            echo "Selected simulator dynamically: $simulator_name ($runtime_version), $simulator_id"
+          elif [[ "$compatible" == "true" ]]; then
+            echo "::warning::The SDK is compatible, but no compatible simulator runtime/device is installed. Build validation will run; XCTest execution will be skipped."
+          fi
+
+          echo "sdk_compatible=$compatible" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "xcode_version=$xcode_version" >> "$GITHUB_OUTPUT"
+          echo "swift_version=$swift_version" >> "$GITHUB_OUTPUT"
+          echo "sdk_version=$sdk_version" >> "$GITHUB_OUTPUT"
+          echo "runtime_version=$runtime_version" >> "$GITHUB_OUTPUT"
+          echo "has_simulator=$has_simulator" >> "$GITHUB_OUTPUT"
+          echo "simulator_id=$simulator_id" >> "$GITHUB_OUTPUT"
+          echo "simulator_name=$simulator_name" >> "$GITHUB_OUTPUT"
+
+          if [[ "$compatible" != "true" ]]; then
+            echo "::warning::$reason Swift build and XCTest validation are skipped because the required Apple tooling is unavailable."
+          fi
+          echo "::endgroup::"
+
+      - name: Explain unavailable Apple tooling
+        if: steps.apple.outputs.sdk_compatible != 'true'
+        shell: bash
+        run: |
+          echo "::warning::${{ steps.apple.outputs.reason }}"
+          echo "This is a hosted-runner limitation, not a repository failure."
+          echo "Repository validation completed independently in Stage A."
+
+      - name: Build app for iOS Simulator
+        id: simulator-build
+        if: steps.apple.outputs.sdk_compatible == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "::group::Simulator build"
           xcodebuild \
             -project AFM3Tester.xcodeproj \
             -scheme AFM3Tester \
             -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
+            -derivedDataPath "$RUNNER_TEMP/AFM3TesterDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
             build
+          echo "::endgroup::"
 
-      - name: Build for testing
+      - name: Explain unavailable simulator runtime
+        if: steps.apple.outputs.sdk_compatible == 'true' && steps.apple.outputs.has_simulator != 'true'
+        shell: bash
+        run: |
+          echo "::warning::No compatible simulator runtime/device is installed. XCTest execution is skipped without failing CI."
+
+      - name: Build AFM3TesterTests
+        id: build-for-testing
+        if: steps.apple.outputs.sdk_compatible == 'true' && steps.apple.outputs.has_simulator == 'true'
+        shell: bash
         run: |
           set -euo pipefail
+          echo "::group::Build for testing"
           xcodebuild \
             -project AFM3Tester.xcodeproj \
             -scheme AFM3Tester \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination "platform=iOS Simulator,id=${{ steps.apple.outputs.simulator_id }}" \
             -configuration Debug \
+            -derivedDataPath "$RUNNER_TEMP/AFM3TesterDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
             build-for-testing
+          echo "::endgroup::"
 
       - name: Run AFM3TesterTests
+        id: test-without-building
+        if: steps.apple.outputs.sdk_compatible == 'true' && steps.apple.outputs.has_simulator == 'true'
+        shell: bash
         run: |
           set -euo pipefail
-          XCTESTRUN=$(ls Build/Products/*.xctestrun 2>/dev/null || ls ~/Library/Developer/Xcode/DerivedData/*/Build/Products/*.xctestrun | head -1)
-          if [ -z "${XCTESTRUN}" ]; then
-            XCTESTRUN=$(find ~/Library/Developer/Xcode/DerivedData -name '*.xctestrun' -path '*AFM3Tester*' | head -1)
-          fi
-          if [ -z "${XCTESTRUN}" ]; then
-            echo "Could not locate .xctestrun file after build-for-testing."
+          echo "::group::XCTest"
+          xctestrun="$(find "$RUNNER_TEMP/AFM3TesterDerivedData/Build/Products" -name '*.xctestrun' -print -quit)"
+          if [[ -z "$xctestrun" ]]; then
+            echo "build-for-testing succeeded but no .xctestrun file was produced."
             exit 1
           fi
+
           xcodebuild \
             test-without-building \
-            -xctestrun "${XCTESTRUN}" \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -xctestrun "$xctestrun" \
+            -destination "platform=iOS Simulator,id=${{ steps.apple.outputs.simulator_id }}" \
             -parallel-testing-enabled NO
+          echo "::endgroup::"
 
-      - name: CI limitation note
+      - name: Record Swift-validation status
+        id: status
         if: always()
+        shell: bash
+        env:
+          SDK_COMPATIBLE: ${{ steps.apple.outputs.sdk_compatible }}
+          HAS_SIMULATOR: ${{ steps.apple.outputs.has_simulator }}
+          BUILD_OUTCOME: ${{ steps.simulator-build.outcome }}
+          BUILD_TESTS_OUTCOME: ${{ steps.build-for-testing.outcome }}
+          TEST_OUTCOME: ${{ steps.test-without-building.outcome }}
         run: |
+          if [[ "$SDK_COMPATIBLE" != "true" ]]; then
+            echo "simulator_build=skipped" >> "$GITHUB_OUTPUT"
+            echo "swift_tests=skipped" >> "$GITHUB_OUTPUT"
+          elif [[ "$BUILD_OUTCOME" != "success" ]]; then
+            echo "simulator_build=failed" >> "$GITHUB_OUTPUT"
+            echo "swift_tests=not-run" >> "$GITHUB_OUTPUT"
+          elif [[ "$HAS_SIMULATOR" != "true" ]]; then
+            echo "simulator_build=passed" >> "$GITHUB_OUTPUT"
+            echo "swift_tests=skipped" >> "$GITHUB_OUTPUT"
+          elif [[ "$BUILD_TESTS_OUTCOME" != "success" || "$TEST_OUTCOME" != "success" ]]; then
+            echo "simulator_build=passed" >> "$GITHUB_OUTPUT"
+            echo "swift_tests=failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "simulator_build=passed" >> "$GITHUB_OUTPUT"
+            echo "swift_tests=passed" >> "$GITHUB_OUTPUT"
+          fi
+
+  foundation_models:
+    name: Stage C · Foundation Models status
+    needs: [repository_validation, swift_validation]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      status: ${{ steps.status.outputs.status }}
+    steps:
+      - name: Document physical-device requirement
+        id: status
+        shell: bash
+        run: |
+          echo "::group::Foundation Models validation boundary"
           cat <<'EOF'
-          CI validates compilation and deterministic XCTest logic only.
-          Hosted GitHub Actions simulators cannot execute Foundation Models on-device inference.
-          Physical-device inference, Apple Intelligence asset readiness, and offline-path evidence require manual testing on supported hardware.
-          If the runner Xcode/iOS SDK is older than iOS 27, this workflow may fail until GitHub provides a compatible macOS/Xcode image.
+          Foundation Models inference requires:
+          - physical device
+          - Apple Intelligence
+          - supported hardware
+          - iOS 27
+          - simulator unsupported
           EOF
+          echo "::warning::Foundation Models inference is intentionally not attempted in GitHub Actions."
+          echo "status=manual-physical-device-validation" >> "$GITHUB_OUTPUT"
+          echo "::endgroup::"
+
+  summary:
+    name: CI · Final summary
+    needs: [repository_validation, swift_validation, foundation_models]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Write GitHub Step Summary
+        shell: bash
+        env:
+          REPOSITORY_JOB: ${{ needs.repository_validation.result }}
+          REPOSITORY_STATUS: ${{ needs.repository_validation.outputs.status }}
+          SWIFT_JOB: ${{ needs.swift_validation.result }}
+          SWIFT_TESTS: ${{ needs.swift_validation.outputs.swift_tests }}
+          SIMULATOR_BUILD: ${{ needs.swift_validation.outputs.simulator_build }}
+          FOUNDATION_STATUS: ${{ needs.foundation_models.outputs.status }}
+          XCODE_VERSION: ${{ needs.swift_validation.outputs.xcode_version }}
+          SWIFT_VERSION: ${{ needs.swift_validation.outputs.swift_version }}
+          SDK_VERSION: ${{ needs.swift_validation.outputs.sdk_version }}
+          RUNTIME_VERSION: ${{ needs.swift_validation.outputs.runtime_version }}
+          LIMITATION_REASON: ${{ needs.swift_validation.outputs.reason }}
+        run: |
+          render_status() {
+            case "$1" in
+              passed|success) printf '✅ Passed' ;;
+              skipped|not-run) printf '⚠️ Skipped' ;;
+              manual-physical-device-validation) printf '⚠️ Manual physical-device validation required' ;;
+              *) printf '❌ Failed' ;;
+            esac
+          }
+
+          repository="$(render_status "${REPOSITORY_STATUS:-$REPOSITORY_JOB}")"
+          swift_tests="$(render_status "${SWIFT_TESTS:-$SWIFT_JOB}")"
+          simulator_build="$(render_status "${SIMULATOR_BUILD:-$SWIFT_JOB}")"
+          foundation="$(render_status "${FOUNDATION_STATUS:-manual-physical-device-validation}")"
+
+          {
+            echo "# AFM3Tester CI summary"
+            echo
+            echo "| Validation area | Result |"
+            echo "| --- | --- |"
+            echo "| Repository validation | $repository |"
+            echo "| Swift tests | $swift_tests |"
+            echo "| Simulator build | $simulator_build |"
+            echo "| Foundation Models status | $foundation |"
+            echo
+            echo "## Detected Apple environment"
+            echo
+            echo "- Xcode: ${XCODE_VERSION:-unavailable}"
+            echo "- Swift: ${SWIFT_VERSION:-unavailable}"
+            echo "- iOS Simulator SDK: ${SDK_VERSION:-unavailable}"
+            echo "- Selected simulator runtime: ${RUNTIME_VERSION:-unavailable}"
+            if [[ -n "${LIMITATION_REASON:-}" ]]; then
+              echo "- Capability note: $LIMITATION_REASON"
+            fi
+            echo
+            echo "> Foundation Models inference is never attempted on a simulator. Physical-device evidence remains a manual release check."
+          } >> "$GITHUB_STEP_SUMMARY"

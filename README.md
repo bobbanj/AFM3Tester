@@ -1,5 +1,7 @@
 # AFM3Tester
 
+[![CI](https://github.com/bobbanj/AFM3Tester/actions/workflows/ci.yml/badge.svg)](https://github.com/bobbanj/AFM3Tester/actions/workflows/ci.yml)
+
 **AFM3Tester — Foundation Models diagnostics for SwiftUI developers**
 
 AFM3Tester is an open-source SwiftUI diagnostic and capability test suite for Apple’s public **FoundationModels** framework on supported physical iPhones running iOS 27.
