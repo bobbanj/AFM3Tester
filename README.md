@@ -10,6 +10,24 @@ It helps developers observe on-device model availability, run structured diagnos
 
 > **Observed result:** On one iPhone 17 Pro Max in Sweden running iOS 27 Developer Beta 3, `SystemLanguageModel.default` reported **Available**, deployment was observed as **on-device**, and basic text generation succeeded. This is a beta-software observation, not a universal guarantee for other devices, regions, locales, builds, or releases.
 
+### Try AFM3Tester
+
+• GitHub
+
+https://github.com/bobbanj/AFM3Tester
+
+• TestFlight
+
+https://testflight.apple.com/join/FJMVaGWC
+
+Supports:
+
+• iPhone
+• iOS 27 Beta
+• Apple Foundation Models
+
+No Xcode required.
+
 ## What it tests
 
 AFM3Tester currently exercises:
