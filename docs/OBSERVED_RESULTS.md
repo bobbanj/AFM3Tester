@@ -61,10 +61,12 @@ If you perform offline verification successfully, consider adding a redacted ent
 ## Interpretation notes
 
 - **Concurrency success** does not prove hardware-level parallel inference; the framework may serialize requests internally.
-- **Character throughput** reported by the app is not token throughput.
+- **Character throughput** reported by the app is not token throughput; estimated tokens/sec are labeled estimates.
 - **Safety observations** are behavioral notes, not a security certification.
+- **Expected policy block** for unauthorized `setDemoTheme` is correct application enforcement, not a failed tool suite.
 - **Model description strings** such as “AFM 3 Core Advanced” are diagnostic observations and should not be treated as stable API identifiers.
 - **Beta behavior** may differ on other devices, regions, locales, or later builds.
+- **v0.2 local history / comparison** features were not part of the original captured evidence set; re-run on device to populate history.
 
 ## How to extend this document
 

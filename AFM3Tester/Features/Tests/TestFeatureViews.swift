@@ -1,3 +1,4 @@
+import FoundationModels
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -54,7 +55,7 @@ struct ToolCallingView: View {
     var body: some View {
         NavigationStack {
             DiagnosticScrollScreen {
-                Text("Local tools only: getProjectStatus, calculateBudget, setDemoTheme.")
+                Text("Local tools only: getProjectStatus, calculateBudget, setDemoTheme. Denied side effects are expected policy enforcement, not suite failures.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -63,11 +64,16 @@ struct ToolCallingView: View {
                         store.allowSideEffectTools = newValue
                     }
 
-                RunTestButton(title: isRunning ? "Running…" : "Run Tool Calling Tests", isRunning: isRunning) {
+                RunTestButton(
+                    title: isRunning ? "Running…" : "Run Tool Calling Tests",
+                    isRunning: isRunning || store.isInferenceBusy
+                ) {
                     store.allowSideEffectTools = allowSideEffects
                     Task {
                         isRunning = true
+                        store.isInferenceBusy = true
                         lastResult = await TestRunners.toolTests(service: service, store: store)
+                        store.isInferenceBusy = false
                         await store.syncDemoThemeFromController()
                         isRunning = false
                     }
@@ -294,13 +300,22 @@ struct BenchmarkView: View {
         NavigationStack {
             DiagnosticScrollScreen {
                 Label(
-                    "Benchmark results are beta-software observations on this device and are not an official measure of model capability.",
+                    "Benchmark results are beta-software observations on this device and are not an official measure of model capability. Not statistically significant.",
                     systemImage: "exclamationmark.triangle"
                 )
                 .font(.caption)
                 .foregroundStyle(.orange)
 
-                RunTestButton(title: isRunning ? "Running…" : "Run Benchmark (3 reps)", isRunning: isRunning) {
+                if store.isInferenceBusy && !store.isRunningAllSafeTests {
+                    Text("Benchmark is disabled while another inference suite is active.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                RunTestButton(
+                    title: isRunning ? "Running…" : "Run Benchmark (3 reps)",
+                    isRunning: isRunning || store.isRunningBenchmark || (store.isInferenceBusy && !store.isRunningAllSafeTests)
+                ) {
                     Task {
                         isRunning = true
                         _ = await TestRunners.benchmarkTest(service: service, store: store)
@@ -308,18 +323,73 @@ struct BenchmarkView: View {
                     }
                 }
 
-                ForEach(store.benchmarks.suffix(9)) { sample in
-                    GroupBox("\(sample.testName) — rep \(sample.repetition)") {
-                        LatencyMetricsView(metrics: sample.latency)
-                        InfoRow(label: "Thermal", value: sample.thermalState)
-                        InfoRow(label: "Battery", value: sample.batteryLevel.map { String(format: "%.0f%%", $0 * 100) } ?? "N/A")
-                        InfoRow(label: "Low Power", value: sample.isLowPowerModeEnabled ? "Yes" : "No")
-                        InfoRow(label: "Charging", value: sample.isCharging ? "Yes" : "No")
+                if let summary = store.lastBenchmarkSummary {
+                    GroupBox("Current Benchmark") {
+                        InfoRow(label: "Samples", value: "\(summary.sampleCount)")
+                        InfoRow(label: "Median total", value: formatSeconds(summary.medianTotalLatencySeconds))
+                        InfoRow(label: "Min total", value: formatSeconds(summary.minTotalLatencySeconds))
+                        InfoRow(label: "Max total", value: formatSeconds(summary.maxTotalLatencySeconds))
+                        InfoRow(label: "Median TTFS", value: formatSeconds(summary.medianTimeToFirstStreamedContentSeconds))
+                        InfoRow(label: "Min / max TTFS", value: "\(formatSeconds(summary.minTimeToFirstStreamedContentSeconds)) / \(formatSeconds(summary.maxTimeToFirstStreamedContentSeconds))")
+                        InfoRow(label: "Chars/sec", value: summary.medianCharactersPerSecond.map { String(format: "%.1f", $0) } ?? "n/a")
+                        InfoRow(
+                            label: "Est. tokens/sec",
+                            value: summary.estimatedMedianTokensPerSecond.map { String(format: "%.1f (estimate only)", $0) } ?? "n/a"
+                        )
+                        InfoRow(label: "Thermal", value: "\(summary.thermalStateBefore ?? "n/a") → \(summary.thermalStateAfter ?? "n/a")")
+                        InfoRow(
+                            label: "Battery",
+                            value: "\(formatBattery(summary.batteryPercentageBefore)) → \(formatBattery(summary.batteryPercentageAfter))"
+                        )
+                        InfoRow(label: "Charging", value: summary.isCharging.map { $0 ? "Yes" : "No" } ?? "n/a")
+                        InfoRow(label: "Low Power", value: summary.isLowPowerModeEnabled.map { $0 ? "Yes" : "No" } ?? "n/a")
+                    }
+                }
+
+                if !store.currentBenchmarkSamples.isEmpty {
+                    GroupBox("Current Benchmark Samples") {
+                        ForEach(store.currentBenchmarkSamples) { sample in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("\(sample.testName) — rep \(sample.repetition)")
+                                    .font(.caption.weight(.semibold))
+                                LatencyMetricsView(metrics: sample.latency)
+                            }
+                            .padding(.vertical, 2)
+                            Divider()
+                        }
+                    }
+                }
+
+                let historicalSamples = Array(store.benchmarks.dropLast(store.currentBenchmarkSamples.count))
+                if !historicalSamples.isEmpty {
+                    GroupBox("Historical Benchmark Records") {
+                        Text("Earlier samples retained in this session (not mixed into the current export summary).")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        ForEach(historicalSamples.suffix(9)) { sample in
+                            GroupBox("\(sample.testName) — rep \(sample.repetition)") {
+                                LatencyMetricsView(metrics: sample.latency)
+                                InfoRow(label: "Thermal", value: sample.thermalState)
+                                InfoRow(label: "Battery", value: sample.batteryLevel.map { String(format: "%.0f%%", $0 * 100) } ?? "N/A")
+                                InfoRow(label: "Low Power", value: sample.isLowPowerModeEnabled ? "Yes" : "No")
+                                InfoRow(label: "Charging", value: sample.isCharging ? "Yes" : "No")
+                            }
+                        }
                     }
                 }
             }
             .navigationTitle("Benchmark")
         }
+    }
+
+    private func formatSeconds(_ value: Double?) -> String {
+        guard let value else { return "n/a" }
+        return String(format: "%.3fs", value)
+    }
+
+    private func formatBattery(_ value: Double?) -> String {
+        guard let value else { return "n/a" }
+        return String(format: "%.0f%%", value)
     }
 }
 
@@ -346,7 +416,7 @@ struct OfflineVerificationView: View {
                     3. Verify the network path below shows no satisfied path.
                     4. Run offline tests and export the report.
 
-                    The app does not toggle Airplane Mode. NWPathMonitor cannot prove that every radio is disabled.
+                    Partial verification is normal if one optional check fails. The app does not toggle Airplane Mode. NWPathMonitor cannot prove that every radio is disabled.
                     """)
                         .font(.subheadline)
                 }
@@ -375,6 +445,10 @@ struct OfflineVerificationView: View {
                             networkMonitor: monitor
                         )
                         pathSnapshot = await monitor.currentSnapshot()
+                        // Persist so History / Device Report never show Offline as Not Run after a completed UI run.
+                        let availability = await service.availabilityDescription
+                        let contextSize = await service.contextSize
+                        store.persistCurrentRun(availability: availability, contextSize: contextSize)
                         isRunning = false
                     }
                 }
@@ -389,7 +463,7 @@ struct OfflineVerificationView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(record.startedAt.formatted(date: .abbreviated, time: .standard))
                                     .font(.caption.bold())
-                                Text("Outcome: \(record.testOutcome.rawValue)")
+                                Text("Outcome: \(record.testOutcome.displayLabel)")
                                     .font(.caption)
                                 Text("Path: \(record.networkPathStatus)")
                                     .font(.caption)
@@ -421,34 +495,75 @@ struct ErrorExplorerView: View {
 
     var body: some View {
         NavigationStack {
-            List(store.errorLog.reversed()) { entry in
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(entry.testName).font(.headline)
-                        Spacer()
-                        Text(entry.category.rawValue)
-                            .font(.caption2)
-                            .padding(4)
-                            .background(Color(.tertiarySystemFill), in: Capsule())
-                    }
-                    Text(entry.timestamp.formatted(date: .abbreviated, time: .standard))
+            List {
+                Section {
+                    Text("Unexpected runtime failures stay in Errors. Intentional policy denials are listed separately as Expected Policy Events.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("Availability: \(entry.availabilityState)")
-                        .font(.caption)
-                    Text(entry.localizedDescription).font(.subheadline)
-                    Text(entry.debugDescription)
-                        .font(.caption.monospaced())
-                        .textSelection(.enabled)
                 }
-                .padding(.vertical, 4)
+
+                Section("Errors") {
+                    if store.errorLog.isEmpty {
+                        Text("No unexpected errors logged.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(store.errorLog.reversed()) { entry in
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(entry.testName).font(.headline)
+                                    Spacer()
+                                    Text(entry.category.rawValue)
+                                        .font(.caption2)
+                                        .padding(4)
+                                        .background(Color(.tertiarySystemFill), in: Capsule())
+                                }
+                                Text(entry.timestamp.formatted(date: .abbreviated, time: .standard))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text("Availability: \(entry.availabilityState)")
+                                    .font(.caption)
+                                Text(entry.localizedDescription).font(.subheadline)
+                                Text(entry.debugDescription)
+                                    .font(.caption.monospaced())
+                                    .textSelection(.enabled)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+
+                Section("Expected Policy Events") {
+                    if store.policyEvents.isEmpty {
+                        Text("No expected policy events recorded.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(store.policyEvents.reversed()) { event in
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(event.testName).font(.headline)
+                                    Spacer()
+                                    Text(event.kind.rawValue)
+                                        .font(.caption2)
+                                        .padding(4)
+                                        .background(Color.teal.opacity(0.2), in: Capsule())
+                                        .foregroundStyle(.teal)
+                                }
+                                Text(event.timestamp.formatted(date: .abbreviated, time: .standard))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(event.summary).font(.subheadline)
+                                if let detail = event.detail {
+                                    Text(detail)
+                                        .font(.caption.monospaced())
+                                        .textSelection(.enabled)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
             }
             .navigationTitle("Error Explorer")
-            .overlay {
-                if store.errorLog.isEmpty {
-                    ContentUnavailableView("No Errors Logged", systemImage: "checkmark.circle")
-                }
-            }
         }
     }
 }
@@ -464,9 +579,18 @@ struct ExportView: View {
             DiagnosticScrollScreen {
                 Toggle("Include prompt text in export", isOn: $store.includePromptsInExport)
 
-                Text("Sensitive patterns (emails, phones, API keys) are redacted automatically.")
+                Text("Sensitive patterns (emails, phones, API keys) are redacted automatically. Prompt contents are excluded unless explicitly enabled.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Button("Copy GitHub Device Report") {
+                    let model = SystemLanguageModel.default
+                    UIPasteboard.general.string = store.copyGitHubDeviceReport(
+                        availability: model.availability.displayDescription,
+                        contextSize: model.contextSize
+                    )
+                }
+                .buttonStyle(.bordered)
 
                 Button("Prepare Export") {
                     let report = ReportExporter.buildReport(from: store)

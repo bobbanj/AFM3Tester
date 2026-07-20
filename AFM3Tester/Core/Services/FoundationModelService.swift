@@ -28,6 +28,7 @@ struct GeneratingInferenceResult<Content: Generable & Sendable>: Sendable {
 /// Allows the inference actor to log errors without MainActor coupling.
 protocol DiagnosticRecording: Sendable {
     func recordError(_ entry: ErrorLogEntry) async
+    func recordPolicyEvent(_ entry: PolicyEventEntry) async
 }
 
 // MARK: - Foundation Model Service
@@ -38,12 +39,14 @@ actor FoundationModelService {
 
     private let model: SystemLanguageModel
     private let recordError: @Sendable (ErrorLogEntry) async -> Void
+    private let recordPolicyEvent: @Sendable (PolicyEventEntry) async -> Void
     private let recordSuccessfulInference: @Sendable () async -> Void
 
     init(
         model: SystemLanguageModel = .default,
         diagnosticRecorder: (any DiagnosticRecording)? = nil,
         recordError: @escaping @Sendable (ErrorLogEntry) async -> Void = { _ in },
+        recordPolicyEvent: @escaping @Sendable (PolicyEventEntry) async -> Void = { _ in },
         recordSuccessfulInference: @escaping @Sendable () async -> Void = {}
     ) {
         self.model = model
@@ -51,8 +54,12 @@ actor FoundationModelService {
             self.recordError = { entry in
                 await diagnosticRecorder.recordError(entry)
             }
+            self.recordPolicyEvent = { entry in
+                await diagnosticRecorder.recordPolicyEvent(entry)
+            }
         } else {
             self.recordError = recordError
+            self.recordPolicyEvent = recordPolicyEvent
         }
         self.recordSuccessfulInference = recordSuccessfulInference
     }
@@ -234,6 +241,17 @@ actor FoundationModelService {
 
     private func logError(_ error: Error, testName: String) async {
         let availability = availabilityDescription
+        if ToolPolicyClassifier.isExpectedSideEffectDenial(error) {
+            let entry = PolicyEventEntry(
+                testName: testName,
+                kind: .sideEffectsNotAllowed,
+                summary: "Side-effect correctly denied without explicit permission",
+                detail: String(reflecting: error)
+            )
+            await recordPolicyEvent(entry)
+            return
+        }
+
         let entry = await MainActor.run {
             ErrorLogEntry(
                 testName: testName,

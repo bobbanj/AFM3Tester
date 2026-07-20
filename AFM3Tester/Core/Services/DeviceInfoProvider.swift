@@ -33,6 +33,14 @@ enum DeviceInfoProvider {
         return machine
     }
 
+    static var marketingName: String {
+        DeviceMarketingNameResolver.marketingName(forHardwareIdentifier: deviceModelIdentifier)
+    }
+
+    static var deviceDisplayLabel: String {
+        DeviceMarketingNameResolver.displayLabel(forHardwareIdentifier: deviceModelIdentifier)
+    }
+
     // MARK: - Locale
 
     static var localeIdentifier: String {
@@ -108,6 +116,7 @@ enum DeviceInfoProvider {
             osVersion: osVersion,
             osBuild: osBuild,
             deviceModel: deviceModelIdentifier,
+            marketingName: marketingName,
             localeIdentifier: localeIdentifier,
             languageCode: languageCode,
             regionCode: regionCode,

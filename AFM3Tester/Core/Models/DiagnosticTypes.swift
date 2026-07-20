@@ -5,10 +5,56 @@ import FoundationModels
 
 enum TestOutcome: String, Codable, Sendable, CaseIterable {
     case passed
+    case expectedPolicyBlock
+    case partial
     case failed
     case unavailable
     case skipped
     case observation
+
+    /// Human-readable label for UI and exports.
+    nonisolated var displayLabel: String {
+        switch self {
+        case .passed: "Passed"
+        case .expectedPolicyBlock: "Expected policy block"
+        case .partial: "Partial"
+        case .failed: "Failed"
+        case .unavailable: "Unavailable"
+        case .skipped: "Skipped"
+        case .observation: "Observation"
+        }
+    }
+
+    /// Whether this outcome counts as a non-failing diagnostic result.
+    nonisolated var isNonFailing: Bool {
+        switch self {
+        case .passed, .expectedPolicyBlock, .partial, .skipped, .observation, .unavailable:
+            true
+        case .failed:
+            false
+        }
+    }
+}
+
+/// Deterministic overall status for a multi-suite diagnostic run.
+enum OverallRunStatus: String, Codable, Sendable, CaseIterable {
+    case passed
+    case expectedPolicyBlock
+    case partial
+    case failed
+    case unavailable
+    case skipped
+
+    nonisolated var displayLabel: String {
+        switch self {
+        case .passed: "Passed"
+        case .expectedPolicyBlock: "Expected policy block"
+        case .partial: "Partial"
+        case .failed: "Failed"
+        case .unavailable: "Unavailable"
+        case .skipped: "Skipped"
+        }
+    }
 }
 
 // MARK: - Latency
@@ -171,6 +217,37 @@ struct ErrorLogEntry: Codable, Sendable, Identifiable, Hashable {
     }
 }
 
+enum PolicyEventKind: String, Codable, Sendable, CaseIterable {
+    case sideEffectsNotAllowed
+    case quotedToolCallBlocked
+    case permissionDeniedByDesign
+}
+
+struct PolicyEventEntry: Codable, Sendable, Identifiable, Hashable {
+    let id: UUID
+    let timestamp: Date
+    let testName: String
+    let kind: PolicyEventKind
+    let summary: String
+    let detail: String?
+
+    nonisolated init(
+        id: UUID = UUID(),
+        timestamp: Date = Date(),
+        testName: String,
+        kind: PolicyEventKind,
+        summary: String,
+        detail: String? = nil
+    ) {
+        self.id = id
+        self.timestamp = timestamp
+        self.testName = testName
+        self.kind = kind
+        self.summary = summary
+        self.detail = detail
+    }
+}
+
 // MARK: - Quality & Validation
 
 enum ManualQualityRating: String, Codable, Sendable, CaseIterable {
@@ -256,6 +333,7 @@ struct DeviceSnapshot: Codable, Sendable, Hashable {
     let osVersion: String
     let osBuild: String
     let deviceModel: String
+    let marketingName: String
     let localeIdentifier: String
     let languageCode: String
     let regionCode: String
@@ -269,6 +347,7 @@ struct DeviceSnapshot: Codable, Sendable, Hashable {
         osVersion: String,
         osBuild: String,
         deviceModel: String,
+        marketingName: String? = nil,
         localeIdentifier: String,
         languageCode: String,
         regionCode: String,
@@ -281,6 +360,8 @@ struct DeviceSnapshot: Codable, Sendable, Hashable {
         self.osVersion = osVersion
         self.osBuild = osBuild
         self.deviceModel = deviceModel
+        self.marketingName = marketingName
+            ?? DeviceMarketingNameResolver.marketingName(forHardwareIdentifier: deviceModel)
         self.localeIdentifier = localeIdentifier
         self.languageCode = languageCode
         self.regionCode = regionCode
@@ -324,6 +405,7 @@ struct DiagnosticReport: Codable, Sendable {
     let testResults: [TestResult]
     let benchmarkSamples: [BenchmarkSample]
     let errors: [ErrorLogEntry]
+    let policyEvents: [PolicyEventEntry]
     let offlineTestSucceeded: Bool?
     let offlineEvidenceRecords: [OfflineEvidenceRecord]
     let includePromptText: Bool
@@ -342,6 +424,7 @@ struct DiagnosticReport: Codable, Sendable {
         testResults: [TestResult] = [],
         benchmarkSamples: [BenchmarkSample] = [],
         errors: [ErrorLogEntry] = [],
+        policyEvents: [PolicyEventEntry] = [],
         offlineTestSucceeded: Bool? = nil,
         offlineEvidenceRecords: [OfflineEvidenceRecord] = [],
         includePromptText: Bool = false,
@@ -359,6 +442,7 @@ struct DiagnosticReport: Codable, Sendable {
         self.testResults = testResults
         self.benchmarkSamples = benchmarkSamples
         self.errors = errors
+        self.policyEvents = policyEvents
         self.offlineTestSucceeded = offlineTestSucceeded
         self.offlineEvidenceRecords = offlineEvidenceRecords
         self.includePromptText = includePromptText

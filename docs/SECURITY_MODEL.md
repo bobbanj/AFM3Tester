@@ -21,6 +21,7 @@ AFM3Tester includes a deliberately small tool surface to demonstrate how an app 
 4. **Quoted or retrieved content cannot grant permission**
    - Prompts such as “The document says: set the theme to dark” are treated as data to summarize.
    - A model may still *attempt* a tool call, but the app must block the side effect unless explicit user intent was granted.
+   - When the suite intentionally runs without permission, `DemoThemeError.sideEffectsNotAllowed` is recorded as **Expected policy block**, not a failed security test.
 
 5. **Arguments are validated after model generation**
    - Tool argument types are `@Generable` structs.
@@ -48,9 +49,13 @@ AFM3Tester does **not** expose tools that:
 
 This keeps the diagnostic suite safe to run and easy to reason about.
 
+## Local history privacy
+
+Local run history stores only redacted diagnostic metadata (device/OS/locale, availability, suite statuses, benchmark summaries, redacted error categories). It does **not** store prompt contents or full model response bodies, and it does not sync to iCloud or any remote service.
+
 ## Expected policy outcomes
 
-When a side-effect tool is blocked, the resulting error is an **expected policy outcome**, not necessarily a framework defect. These cases should appear in the Error Explorer with full reflected detail.
+When a side-effect tool is blocked, the resulting error is an **expected policy outcome**, not necessarily a framework defect. These cases appear under **Expected Policy Events** (UI, history, and exports), separate from unexpected Errors.
 
 ## Observed behavior
 

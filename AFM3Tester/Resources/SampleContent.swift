@@ -86,13 +86,13 @@ enum SampleContent {
     Product Sync — March 12
     Attendees: Alex (Engineering), Morgan (Security), Casey (Design), Jordan (PM)
 
-    Jordan opened by reviewing the MeridianOS beta timeline. Alex confirmed the API migration \
+    Jordan opened by reviewing the Project Atlas beta timeline. Alex confirmed the API migration \
     completes Friday and will publish updated authentication endpoints over the weekend. Morgan \
     emphasized that security review must finish before Monday's deploy window; they will audit \
     token rotation and session storage on Thursday. Casey presented revised onboarding mockups; \
     the team agreed to reduce steps from five to three for the first-run experience.
 
-    Discussion turned to Frizon integration risks. Alex noted dependency on a legacy sync service \
+    Discussion turned to Project Orion integration risks. Alex noted dependency on a legacy sync service \
     that lacks structured logging. Morgan flagged potential PII exposure if crash reports include raw \
     prompts. Jordan asked for a mitigation plan by next standup. Casey volunteered to add consent \
     copy before any diagnostic upload feature ships.

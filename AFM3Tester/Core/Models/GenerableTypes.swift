@@ -36,7 +36,7 @@ struct SupportTicketClassification {
 
 @Generable
 struct GetProjectStatusArguments {
-    @Guide(description: "Project codename to look up, such as MeridianOS, Frizon, or Aegis.")
+    @Guide(description: "Project codename to look up, such as Project Atlas, Project Orion, or Sample Workspace.")
     var projectName: String
 }
 

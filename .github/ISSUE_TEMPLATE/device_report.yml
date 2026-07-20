@@ -1,0 +1,117 @@
+name: Community Device Report
+description: Share redacted Foundation Models observations from a supported device
+title: "Device report: <marketing name> / iOS <version>"
+labels: ["device-report", "observation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing an observation.
+
+        In AFM3Tester, tap **Copy GitHub Device Report** (Overview, Export, or History), then paste that Markdown below.
+        Do **not** manually reconstruct fields from memory, and do **not** include prompts, full model outputs, Apple IDs, Team IDs, emails, phone numbers, UDIDs, or credentials.
+
+  - type: input
+    id: device_model
+    attributes:
+      label: Device model (marketing name)
+      description: Example — iPhone 17 Pro Max
+      placeholder: iPhone 17 Pro Max
+    validations:
+      required: true
+
+  - type: input
+    id: hardware_identifier
+    attributes:
+      label: Hardware identifier
+      description: Example — iPhone18,2
+      placeholder: iPhone18,2
+    validations:
+      required: true
+
+  - type: input
+    id: ios_version_build
+    attributes:
+      label: iOS version and build
+      description: Example — iOS 27.0 beta (24A5380h)
+      placeholder: iOS 27.0 (24A5380h)
+    validations:
+      required: true
+
+  - type: input
+    id: region
+    attributes:
+      label: Region
+      placeholder: SE
+    validations:
+      required: true
+
+  - type: input
+    id: language_locale
+    attributes:
+      label: Language / locale
+      placeholder: en / en_US
+    validations:
+      required: true
+
+  - type: dropdown
+    id: availability
+    attributes:
+      label: Foundation Models Availability
+      options:
+        - Available
+        - Unavailable — device not eligible
+        - Unavailable — Apple Intelligence not enabled
+        - Unavailable — model not ready
+        - Other / see Device Report
+    validations:
+      required: true
+
+  - type: input
+    id: context_size
+    attributes:
+      label: Context size (public SDK contextSize, if shown)
+      placeholder: 8192
+    validations:
+      required: false
+
+  - type: dropdown
+    id: offline_path
+    attributes:
+      label: Offline Verification (from Device Report)
+      description: Prefer the Offline-path observation line from Copy GitHub Device Report.
+      options:
+        - Not Run
+        - Skipped (path still satisfied)
+        - Passed
+        - Partial
+        - Failed
+        - Unavailable
+    validations:
+      required: true
+
+  - type: textarea
+    id: failing_tests
+    attributes:
+      label: Failing tests (if any)
+      description: List suite names that failed. Expected Policy Events are not failures.
+      placeholder: None
+    validations:
+      required: false
+
+  - type: textarea
+    id: redacted_report
+    attributes:
+      label: Device Report (from Copy GitHub Device Report)
+      description: Paste the Markdown produced by AFM3Tester → Copy GitHub Device Report. Do not hand-edit privacy-sensitive content back in.
+      render: markdown
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I confirm this report contains no private prompts, credentials, Apple IDs, Team IDs, emails, phone numbers, or UDIDs.
+          required: true

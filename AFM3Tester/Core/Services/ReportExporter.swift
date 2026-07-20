@@ -6,7 +6,7 @@ enum ReportExporter: Sendable {
     @MainActor
     static func buildReport(from store: DiagnosticStore) -> DiagnosticReport {
         let model = SystemLanguageModel.default
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.2"
 
         return DiagnosticReport(
             appVersion: appVersion,
@@ -18,9 +18,15 @@ enum ReportExporter: Sendable {
             contextWindowExposed: true,
             lastSuccessfulInference: store.lastSuccessfulInference,
             testResults: Array(store.testResults.values).sorted { $0.testName < $1.testName },
-            benchmarkSamples: store.benchmarks,
+            benchmarkSamples: store.currentBenchmarkSamples.isEmpty ? store.benchmarks : store.currentBenchmarkSamples,
             errors: store.errorLog,
-            offlineTestSucceeded: store.testResults["Offline Verification"]?.outcome == .passed,
+            policyEvents: store.policyEvents,
+            offlineTestSucceeded: {
+                switch store.testResults["Offline Verification"]?.outcome {
+                case .passed, .partial: true
+                default: false
+                }
+            }(),
             offlineEvidenceRecords: store.offlineEvidenceRecords,
             includePromptText: store.includePromptsInExport,
             promptContents: store.includePromptsInExport ? nil : nil
@@ -53,7 +59,8 @@ enum ReportExporter: Sendable {
         lines.append("")
         lines.append("## Device")
         lines.append("- OS: \(redacted.device.osVersion) (\(redacted.device.osBuild))")
-        lines.append("- Model: \(redacted.device.deviceModel)")
+        lines.append("- Marketing name: \(redacted.device.marketingName)")
+        lines.append("- Hardware identifier: \(redacted.device.deviceModel)")
         lines.append("- Locale: \(redacted.device.localeIdentifier)")
         lines.append("- Language: \(redacted.device.languageCode)")
         lines.append("- Region: \(redacted.device.regionCode)")
@@ -76,12 +83,17 @@ enum ReportExporter: Sendable {
             lines.append("- Last Successful Inference: \(iso8601(lastInference))")
         }
         lines.append("")
+        lines.append("## Overall")
+        let overall = OverallStatusAggregator.aggregate(redacted.testResults.map(\.outcome))
+        lines.append("- Status: \(overall.displayLabel)")
+        lines.append("- Summary: \(OverallStatusAggregator.conciseSummary(from: redacted.testResults.map(\.outcome)))")
+        lines.append("")
         lines.append("## Test Results")
         if redacted.testResults.isEmpty {
             lines.append("_No test results recorded._")
         } else {
             for result in redacted.testResults {
-                lines.append("### \(result.testName) — \(result.outcome.rawValue)")
+                lines.append("### \(result.testName) — \(result.outcome.displayLabel)")
                 if let message = result.message {
                     lines.append("- Summary: \(message)")
                 }
@@ -89,7 +101,8 @@ enum ReportExporter: Sendable {
                     lines.append("- Total Latency: \(String(format: "%.3f", total))s")
                 }
                 if !result.validationChecks.isEmpty {
-                    lines.append("- Checks:")
+                    let passed = result.validationChecks.filter { $0.passed }.count
+                    lines.append("- Checks: \(passed)/\(result.validationChecks.count) passed")
                     for check in result.validationChecks {
                         let mark = check.passed ? "PASS" : "FAIL"
                         lines.append("  - [\(mark)] \(check.name)\(check.detail.map { ": \($0)" } ?? "")")
@@ -105,6 +118,7 @@ enum ReportExporter: Sendable {
             }
         }
         lines.append("## Benchmarks")
+        lines.append("_Current benchmark samples from the latest run (historical samples may also exist in History)._")
         if redacted.benchmarkSamples.isEmpty {
             lines.append("_No benchmark samples recorded._")
         } else {
@@ -118,7 +132,7 @@ enum ReportExporter: Sendable {
         lines.append("")
         lines.append("## Errors")
         if redacted.errors.isEmpty {
-            lines.append("_No errors logged._")
+            lines.append("_No unexpected errors logged._")
         } else {
             for error in redacted.errors {
                 lines.append("### \(iso8601(error.timestamp)) — \(error.testName)")
@@ -132,12 +146,38 @@ enum ReportExporter: Sendable {
                 lines.append("")
             }
         }
+        lines.append("## Expected Policy Events")
+        lines.append("_Informational. These are intentional application policy denials, not runtime failures._")
+        if redacted.policyEvents.isEmpty {
+            lines.append("_No expected policy events recorded._")
+        } else {
+            for event in redacted.policyEvents {
+                lines.append("- \(iso8601(event.timestamp)) — \(event.testName): \(event.kind.rawValue) — \(event.summary)")
+            }
+        }
+        lines.append("")
         lines.append("## Offline Verification")
         lines.append("_NWPathMonitor reports path status only; it cannot prove every radio is disabled._")
-        if let offline = redacted.offlineTestSucceeded {
+        if let offlineResult = redacted.testResults.first(where: { $0.testName == OfflineObservationFormatter.suiteName }) {
+            let counts = OfflineObservationFormatter.checkCounts(from: offlineResult.validationChecks)
+            lines.append("- Outcome: \(offlineResult.outcome.displayLabel)")
+            if counts.total > 0 {
+                lines.append("- Checks: \(counts.passed)/\(counts.total) passed")
+            }
+            if let message = offlineResult.message {
+                lines.append("- Summary: \(message)")
+            }
+        } else if let evidence = redacted.offlineEvidenceRecords.last {
+            let counts = OfflineObservationFormatter.checkCounts(from: evidence.checks)
+            lines.append("- Outcome: \(evidence.testOutcome.displayLabel)")
+            if counts.total > 0 {
+                lines.append("- Checks: \(counts.passed)/\(counts.total) passed")
+            }
+            lines.append("- Completed: \(iso8601(evidence.completedAt))")
+        } else if let offline = redacted.offlineTestSucceeded {
             lines.append("- Inference while no satisfied path observed: \(offline ? "yes" : "no")")
         } else {
-            lines.append("_Offline-path test not run or skipped._")
+            lines.append("- Offline-path observation: Not Run")
         }
         if redacted.offlineEvidenceRecords.isEmpty {
             lines.append("_No offline evidence records exported._")
@@ -150,7 +190,7 @@ enum ReportExporter: Sendable {
                 lines.append("  Path status: \(record.networkPathStatus)")
                 lines.append("  Path satisfied: \(record.pathSatisfied ? "yes" : "no")")
                 lines.append("  Interfaces: \(record.availableInterfaces.joined(separator: ", "))")
-                lines.append("  Outcome: \(record.testOutcome.rawValue)")
+                lines.append("  Outcome: \(record.testOutcome.displayLabel)")
                 if let message = record.message {
                     lines.append("  Summary: \(message)")
                 }

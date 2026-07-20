@@ -42,6 +42,24 @@ final class ValidationLogicTests: XCTestCase {
         XCTAssertTrue(checks.allSatisfy { $0.passed }, checks.description)
     }
 
+    func testSchemaValidationAcceptsDecodedSummaryWithoutOwnerWordingMatch() {
+        let summary = MeetingSummary(
+            title: "Demo Sync",
+            conciseSummary: "Discussed Project Atlas milestones.",
+            sentiment: "neutral",
+            actionItems: [
+                ActionItem(owner: "Riley", task: "Draft notes", deadline: nil)
+            ],
+            risks: []
+        )
+
+        let schemaChecks = StructuredOutputValidator.validateMeetingSummarySchema(summary)
+        XCTAssertTrue(schemaChecks.allSatisfy(\.passed), schemaChecks.description)
+
+        let fullChecks = StructuredOutputValidator.validateMeetingSummary(summary)
+        XCTAssertFalse(fullChecks.allSatisfy(\.passed), "Full meeting validation still requires fixture owners/count")
+    }
+
     func testValidateSupportTicketsChecksCountAndSchema() {
         let tickets = (1 ... 10).map { index in
             SupportTicketClassification(

@@ -72,6 +72,15 @@ These tests cover deterministic logic only (redaction, validation, local tools, 
 
 In **Debug** builds, the **Overview** tab also exposes **Embedded Unit Self-Tests** as an interactive diagnostic convenience. These are **not** a substitute for XCTest and do not replace CI coverage.
 
+### Community device reports
+
+If you want to share observations without a code change:
+
+1. Run AFM3Tester on a supported physical iPhone.
+2. Use **Copy GitHub Device Report** (Overview or Export).
+3. Open a Community Device Report issue and paste the Markdown.
+4. Confirm the privacy checkbox — never include prompts or credentials.
+
 ### Physical device testing
 
 Inference-related changes should be verified on a supported physical iPhone with Apple Intelligence enabled. Include in your PR notes:
