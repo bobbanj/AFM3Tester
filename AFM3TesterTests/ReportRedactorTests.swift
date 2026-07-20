@@ -27,6 +27,22 @@ final class ReportRedactorTests: XCTestCase {
         XCTAssertEqual(ReportRedactor.redact(input), input)
     }
 
+    func testDoesNotRedactLatencyAsPhone() {
+        let input = "Latency: 1.234567s total generation"
+        let output = ReportRedactor.redactFreeTextPreservingMetrics(input)
+        XCTAssertFalse(output.contains("[REDACTED_PHONE]"))
+        XCTAssertTrue(output.contains("1.234567"))
+    }
+
+    func testDoesNotRedactHardwareIdentifierOrVersion() {
+        let input = "Device iPhone18,2 running 0.2.2 build 4 at 82%"
+        let output = ReportRedactor.redactFreeTextPreservingMetrics(input)
+        XCTAssertTrue(output.contains("iPhone18,2"))
+        XCTAssertTrue(output.contains("0.2.2"))
+        XCTAssertTrue(output.contains("82%"))
+        XCTAssertFalse(output.contains("[REDACTED_PHONE]"))
+    }
+
     @MainActor
     func testRedactsDiagnosticReportFields() {
         let report = DiagnosticReport(

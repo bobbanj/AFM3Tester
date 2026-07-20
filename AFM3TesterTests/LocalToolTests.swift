@@ -4,10 +4,10 @@ import XCTest
 
 @MainActor
 final class LocalToolTests: XCTestCase {
-    func testMeridianOSStatusIsDeterministic() async throws {
+    func testProjectAtlasStatusIsDeterministic() async throws {
         let tool = ProjectStatusTool()
-        let result = try await tool.call(arguments: GetProjectStatusArguments(projectName: "MeridianOS"))
-        XCTAssertTrue(result.localizedCaseInsensitiveContains("MeridianOS"))
+        let result = try await tool.call(arguments: GetProjectStatusArguments(projectName: "Project Atlas"))
+        XCTAssertTrue(result.localizedCaseInsensitiveContains("Project Atlas"))
     }
 
     func testBudgetCalculatorTotalsItems() async throws {

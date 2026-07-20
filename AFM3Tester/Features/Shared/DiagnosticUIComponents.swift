@@ -4,7 +4,7 @@ struct OutcomeBadge: View {
     let outcome: TestOutcome
 
     var body: some View {
-        Text(outcome.rawValue.capitalized)
+        Text(outcome.displayLabel)
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -15,10 +15,36 @@ struct OutcomeBadge: View {
     private var color: Color {
         switch outcome {
         case .passed: .green
+        case .expectedPolicyBlock: .teal
+        case .partial: .yellow
         case .failed: .red
         case .unavailable: .orange
         case .skipped: .gray
         case .observation: .blue
+        }
+    }
+}
+
+struct OverallStatusBadge: View {
+    let status: OverallRunStatus
+
+    var body: some View {
+        Text(status.displayLabel)
+            .font(.caption.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.2), in: Capsule())
+            .foregroundStyle(color)
+    }
+
+    private var color: Color {
+        switch status {
+        case .passed: .green
+        case .expectedPolicyBlock: .teal
+        case .partial: .yellow
+        case .failed: .red
+        case .unavailable: .orange
+        case .skipped: .gray
         }
     }
 }

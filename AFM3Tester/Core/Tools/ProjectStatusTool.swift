@@ -5,7 +5,7 @@ struct ProjectStatusTool: Tool {
     typealias Arguments = GetProjectStatusArguments
 
     let name = "getProjectStatus"
-    let description = "Returns deterministic status information for known internal projects."
+    let description = "Returns deterministic status information for known fictional demo projects."
 
     func call(arguments: Arguments) async throws -> String {
         let normalized = arguments.projectName
@@ -13,27 +13,27 @@ struct ProjectStatusTool: Tool {
             .lowercased()
 
         switch normalized {
-        case "meridianos", "meridian os", "meridian":
+        case "project atlas", "atlas", "demo project":
             return """
-            Project: MeridianOS
+            Project: Project Atlas
             Phase: Beta Hardening
             Health: Green
-            Next Milestone: Public beta channel — April 2
+            Next Milestone: Public demo channel — April 2
             Blockers: None
             Owner: Platform Engineering
             """
-        case "frizon":
+        case "project orion", "orion":
             return """
-            Project: Frizon
+            Project: Project Orion
             Phase: Integration
             Health: Yellow
             Next Milestone: Legacy sync deprecation — May 15
             Blockers: Structured logging gap in sync service
             Owner: Connectivity
             """
-        case "aegis":
+        case "sample workspace", "demo workspace", "workspace":
             return """
-            Project: Aegis
+            Project: Sample Workspace
             Phase: Security Review
             Health: Green
             Next Milestone: Enterprise SSO documentation — March 28
@@ -41,7 +41,7 @@ struct ProjectStatusTool: Tool {
             Owner: Security
             """
         default:
-            return "Unknown project '\(arguments.projectName)'. Known projects: MeridianOS, Frizon, Aegis."
+            return "Unknown project '\(arguments.projectName)'. Known projects: Project Atlas, Project Orion, Sample Workspace."
         }
     }
 }

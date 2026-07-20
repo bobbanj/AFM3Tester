@@ -7,16 +7,19 @@ struct OverviewView: View {
     @State private var snapshot = DeviceInfoProvider.captureSnapshot()
     @State private var availability = "Loading…"
     @State private var contextSize = "Loading…"
+    @State private var contextSizeValue: Int?
     @State private var assetsReady = "Unknown"
     @State private var isRunningAll = false
+    @State private var copiedGitHubReport = false
 
     var body: some View {
         NavigationStack {
             DiagnosticScrollScreen {
                 GroupBox("Device & OS") {
+                    InfoRow(label: "Marketing name", value: snapshot.marketingName)
+                    InfoRow(label: "Hardware ID", value: snapshot.deviceModel)
                     InfoRow(label: "OS Version", value: snapshot.osVersion)
                     InfoRow(label: "OS Build", value: snapshot.osBuild)
-                    InfoRow(label: "Device Model", value: snapshot.deviceModel)
                     InfoRow(label: "Locale", value: snapshot.localeIdentifier)
                     InfoRow(label: "Language", value: snapshot.languageCode)
                     InfoRow(label: "Region", value: snapshot.regionCode)
@@ -37,6 +40,20 @@ struct OverviewView: View {
                     )
                 }
 
+                if let overall = store.lastOverallStatus {
+                    GroupBox("Last Run Summary") {
+                        HStack {
+                            Text(store.lastOverallSummary ?? overall.displayLabel)
+                                .font(.subheadline)
+                            Spacer()
+                            OverallStatusBadge(status: overall)
+                        }
+                        Text("Passed / partial / expected policy block / failed / unavailable / skipped are distinct. Expected policy blocks and partial verification do not fail the overall run as hard failures.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 if snapshot.isSimulator {
                     Label(
                         "The iOS Simulator does not support on-device Foundation Models inference. Use a physical iPhone with Apple Intelligence enabled.",
@@ -46,13 +63,8 @@ struct OverviewView: View {
                     .foregroundStyle(.orange)
                 }
 
-                HStack {
-                    Button("Copy Diagnostic Report") {
-                        UIPasteboard.general.string = store.copyDiagnosticReport()
-                    }
-                    .buttonStyle(.bordered)
-
-                    RunTestButton(title: isRunningAll ? "Running…" : "Run All Safe Tests", isRunning: isRunningAll) {
+                VStack(alignment: .leading, spacing: 8) {
+                    RunTestButton(title: isRunningAll ? "Running…" : "Run All Safe Tests", isRunning: isRunningAll || store.isInferenceBusy) {
                         Task {
                             isRunningAll = true
                             await store.runAllSafeTests(service: service)
@@ -60,11 +72,27 @@ struct OverviewView: View {
                             await refresh()
                         }
                     }
+
+                    HStack {
+                        Button("Copy Diagnostic Report") {
+                            UIPasteboard.general.string = store.copyDiagnosticReport()
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button(copiedGitHubReport ? "Copied" : "Copy GitHub Device Report") {
+                            UIPasteboard.general.string = store.copyGitHubDeviceReport(
+                                availability: availability,
+                                contextSize: contextSizeValue
+                            )
+                            copiedGitHubReport = true
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
 
                 if !store.testResults.isEmpty {
                     GroupBox("Recent Test Results") {
-                        ForEach(Array(store.testResults.values).sorted { $0.recordedAt > $1.recordedAt }.prefix(5)) { result in
+                        ForEach(Array(store.testResults.values).sorted { $0.recordedAt > $1.recordedAt }.prefix(8)) { result in
                             TestResultCard(result: result)
                         }
                     }
@@ -83,6 +111,7 @@ struct OverviewView: View {
         snapshot = DeviceInfoProvider.captureSnapshot()
         availability = await service.availabilityDescription
         let size = await service.contextSize
+        contextSizeValue = size
         contextSize = ModelMetadataFormatter.contextSizeLabel(from: size)
         let available = await service.isModelAvailable
         assetsReady = available ? "Yes (model.isAvailable == true)" : "No"

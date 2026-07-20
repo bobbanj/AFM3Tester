@@ -5,25 +5,47 @@ enum StructuredOutputValidator: Sendable {
     nonisolated static let validSentiments = ["positive", "neutral", "mixed", "negative"]
     nonisolated static let defaultExpectedOwners = Set(["Alex", "Morgan", "Team", "Casey", "Jordan"])
 
-    nonisolated static func validateMeetingSummary(
-        _ summary: MeetingSummary,
-        expectedOwners: Set<String> = defaultExpectedOwners
-    ) -> [ValidationCheck] {
+    /// Schema-level validation after successful `@Generable` decoding.
+    /// Does not compare wording or require specific owner names.
+    nonisolated static func validateMeetingSummarySchema(_ summary: MeetingSummary) -> [ValidationCheck] {
         var checks: [ValidationCheck] = []
         checks.append(ValidationCheck(
+            name: "Decoded MeetingSummary",
+            passed: true,
+            detail: "Structured generation decoded successfully"
+        ))
+        checks.append(ValidationCheck(
             name: "Non-empty title",
-            passed: !summary.title.isEmpty,
+            passed: !summary.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
             detail: summary.title
         ))
         checks.append(ValidationCheck(
             name: "Non-empty conciseSummary",
-            passed: !summary.conciseSummary.isEmpty
+            passed: !summary.conciseSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         ))
         checks.append(ValidationCheck(
             name: "Valid sentiment",
             passed: isValidSentiment(summary.sentiment),
             detail: summary.sentiment
         ))
+        let itemsValid = summary.actionItems.allSatisfy { item in
+            !item.owner.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !item.task.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        checks.append(ValidationCheck(
+            name: "Action item fields valid when present",
+            passed: itemsValid,
+            detail: "\(summary.actionItems.count) items"
+        ))
+        return checks
+    }
+
+    /// Full meeting-transcript validation including expected owners for the fixture.
+    nonisolated static func validateMeetingSummary(
+        _ summary: MeetingSummary,
+        expectedOwners: Set<String> = defaultExpectedOwners
+    ) -> [ValidationCheck] {
+        var checks = validateMeetingSummarySchema(summary)
         checks.append(ValidationCheck(
             name: "At least two action items",
             passed: summary.actionItems.count >= 2,

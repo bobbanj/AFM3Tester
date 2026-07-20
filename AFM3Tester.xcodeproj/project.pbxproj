@@ -43,6 +43,26 @@
 		B107 /* ReportSerializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F107; };
 		B108 /* OfflineEvidenceRecorderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F108; };
 		B109 /* FoundationModels.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F018; platformFilter = ios; };
+		B01C /* OverallStatusAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01C; };
+		B01D /* DeviceMarketingNameResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01D; };
+		B01E /* BenchmarkStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01E; };
+		B01F /* ToolPolicyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F01F; };
+		B020 /* HistoryTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020; };
+		B021 /* TestHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021; };
+		B022 /* RunComparator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022; };
+		B023 /* GitHubDeviceReportExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F023; };
+		B024 /* DiagnosticRunFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024; };
+		B025 /* HistoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025; };
+		B026 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026; };
+		B027 /* OfflineObservationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F027; };
+		B10A /* OverallStatusAggregatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F109; };
+		B10B /* DeviceMarketingNameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A; };
+		B10C /* TestHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10B; };
+		B10D /* RunComparatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10C; };
+		B10E /* BenchmarkStatisticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10D; };
+		B10F /* GitHubDeviceReportExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10E; };
+		B110 /* ToolPolicyClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F; };
+		B111 /* OfflineObservationFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F110; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +103,26 @@
 		F108 /* OfflineEvidenceRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineEvidenceRecorderTests.swift; sourceTree = "<group>"; };
 		P001 /* AFM3Tester.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AFM3Tester.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		P002 /* AFM3TesterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AFM3TesterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F01C /* OverallStatusAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverallStatusAggregator.swift; sourceTree = "<group>"; };
+		F01D /* DeviceMarketingNameResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMarketingNameResolver.swift; sourceTree = "<group>"; };
+		F01E /* BenchmarkStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkStatistics.swift; sourceTree = "<group>"; };
+		F01F /* ToolPolicyClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPolicyClassifier.swift; sourceTree = "<group>"; };
+		F020 /* HistoryTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryTypes.swift; sourceTree = "<group>"; };
+		F021 /* TestHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryStore.swift; sourceTree = "<group>"; };
+		F022 /* RunComparator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunComparator.swift; sourceTree = "<group>"; };
+		F023 /* GitHubDeviceReportExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubDeviceReportExporter.swift; sourceTree = "<group>"; };
+		F024 /* DiagnosticRunFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticRunFactory.swift; sourceTree = "<group>"; };
+		F025 /* HistoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViews.swift; sourceTree = "<group>"; };
+		F026 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		F027 /* OfflineObservationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineObservationFormatter.swift; sourceTree = "<group>"; };
+		F109 /* OverallStatusAggregatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverallStatusAggregatorTests.swift; sourceTree = "<group>"; };
+		F10A /* DeviceMarketingNameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMarketingNameResolverTests.swift; sourceTree = "<group>"; };
+		F10B /* TestHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryStoreTests.swift; sourceTree = "<group>"; };
+		F10C /* RunComparatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunComparatorTests.swift; sourceTree = "<group>"; };
+		F10D /* BenchmarkStatisticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkStatisticsTests.swift; sourceTree = "<group>"; };
+		F10E /* GitHubDeviceReportExporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubDeviceReportExporterTests.swift; sourceTree = "<group>"; };
+		F10F /* ToolPolicyClassifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPolicyClassifierTests.swift; sourceTree = "<group>"; };
+		F110 /* OfflineObservationFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineObservationFormatterTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXContainerItemProxy section */
@@ -183,6 +223,8 @@
 				G00D /* Overview */,
 				G00E /* BasicGeneration */,
 				G00F /* Tests */,
+				G011 /* History */,
+				G012 /* About */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -200,6 +242,7 @@
 			children = (
 				F004 /* DiagnosticTypes.swift */,
 				F005 /* GenerableTypes.swift */,
+				F020 /* HistoryTypes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -218,6 +261,15 @@
 				F012 /* EmbeddedUnitTests.swift */,
 				F01A /* ValidationLogic.swift */,
 				F01B /* OfflineEvidenceRecorder.swift */,
+				F01C /* OverallStatusAggregator.swift */,
+				F01D /* DeviceMarketingNameResolver.swift */,
+				F01E /* BenchmarkStatistics.swift */,
+				F01F /* ToolPolicyClassifier.swift */,
+				F021 /* TestHistoryStore.swift */,
+				F022 /* RunComparator.swift */,
+				F023 /* GitHubDeviceReportExporter.swift */,
+				F024 /* DiagnosticRunFactory.swift */,
+				F027 /* OfflineObservationFormatter.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -275,8 +327,32 @@
 				F106 /* ErrorClassifierTests.swift */,
 				F107 /* ReportSerializationTests.swift */,
 				F108 /* OfflineEvidenceRecorderTests.swift */,
+				F109 /* OverallStatusAggregatorTests.swift */,
+				F10A /* DeviceMarketingNameResolverTests.swift */,
+				F10B /* TestHistoryStoreTests.swift */,
+				F10C /* RunComparatorTests.swift */,
+				F10D /* BenchmarkStatisticsTests.swift */,
+				F10E /* GitHubDeviceReportExporterTests.swift */,
+				F10F /* ToolPolicyClassifierTests.swift */,
+				F110 /* OfflineObservationFormatterTests.swift */,
 			);
 			path = AFM3TesterTests;
+			sourceTree = "<group>";
+		};
+		G011 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				F025 /* HistoryViews.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		G012 /* About */ = {
+			isa = PBXGroup;
+			children = (
+				F026 /* AboutView.swift */,
+			);
+			path = About;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -379,6 +455,14 @@
 				B106 /* ErrorClassifierTests.swift in Sources */,
 				B107 /* ReportSerializationTests.swift in Sources */,
 				B108 /* OfflineEvidenceRecorderTests.swift in Sources */,
+				B10A /* OverallStatusAggregatorTests.swift in Sources */,
+				B10B /* DeviceMarketingNameResolverTests.swift in Sources */,
+				B10C /* TestHistoryStoreTests.swift in Sources */,
+				B10D /* RunComparatorTests.swift in Sources */,
+				B10E /* BenchmarkStatisticsTests.swift in Sources */,
+				B10F /* GitHubDeviceReportExporterTests.swift in Sources */,
+				B110 /* ToolPolicyClassifierTests.swift in Sources */,
+				B111 /* OfflineObservationFormatterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -406,6 +490,18 @@
 				B012 /* EmbeddedUnitTests.swift in Sources */,
 				B01A /* ValidationLogic.swift in Sources */,
 				B01B /* OfflineEvidenceRecorder.swift in Sources */,
+				B01C /* OverallStatusAggregator.swift in Sources */,
+				B01D /* DeviceMarketingNameResolver.swift in Sources */,
+				B01E /* BenchmarkStatistics.swift in Sources */,
+				B01F /* ToolPolicyClassifier.swift in Sources */,
+				B020 /* HistoryTypes.swift in Sources */,
+				B021 /* TestHistoryStore.swift in Sources */,
+				B022 /* RunComparator.swift in Sources */,
+				B023 /* GitHubDeviceReportExporter.swift in Sources */,
+				B024 /* DiagnosticRunFactory.swift in Sources */,
+				B025 /* HistoryViews.swift in Sources */,
+				B026 /* AboutView.swift in Sources */,
+				B027 /* OfflineObservationFormatter.swift in Sources */,
 				B013 /* DiagnosticUIComponents.swift in Sources */,
 				B014 /* OverviewView.swift in Sources */,
 				B015 /* BasicGenerationView.swift in Sources */,
@@ -430,7 +526,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -445,7 +541,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3Tester;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -464,7 +560,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -479,7 +575,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3Tester;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -498,7 +594,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -507,7 +603,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3TesterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -524,7 +620,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -533,7 +629,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3TesterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

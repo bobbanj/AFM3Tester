@@ -10,6 +10,7 @@ struct ReportRedactorTests {
         [
             ("redacts email", testRedactsEmail()),
             ("redacts phone", testRedactsPhone()),
+            ("preserves latency metrics", testPreservesLatencyMetrics()),
             ("redacts api key pattern", testRedactsAPIKey()),
             ("preserves benign text", testPreservesBenignText())
         ]
@@ -25,6 +26,12 @@ struct ReportRedactorTests {
         let input = "Call +1 555-123-4567 today."
         let output = ReportRedactor.redact(input)
         return output.contains("[REDACTED_PHONE]")
+    }
+
+    private static func testPreservesLatencyMetrics() -> Bool {
+        let input = "Latency: 1.234567s on iPhone18,2"
+        let output = ReportRedactor.redactFreeTextPreservingMetrics(input)
+        return output.contains("1.234567") && !output.contains("[REDACTED_PHONE]")
     }
 
     private static func testRedactsAPIKey() -> Bool {
@@ -70,17 +77,17 @@ struct LocalToolTests {
 
     static func runAll() async -> [(name: String, passed: Bool)] {
         await [
-            ("MeridianOS status", testMeridianOSStatus()),
+            ("Project Atlas status", testProjectAtlasStatus()),
             ("budget total", testBudgetTotal()),
             ("invalid project rejected", testInvalidProject())
         ]
     }
 
-    private static func testMeridianOSStatus() async -> Bool {
+    private static func testProjectAtlasStatus() async -> Bool {
         let tool = ProjectStatusTool()
-        let args = GetProjectStatusArguments(projectName: "MeridianOS")
+        let args = GetProjectStatusArguments(projectName: "Project Atlas")
         let result = try? await tool.call(arguments: args)
-        return result?.localizedCaseInsensitiveContains("MeridianOS") == true
+        return result?.localizedCaseInsensitiveContains("Project Atlas") == true
     }
 
     private static func testBudgetTotal() async -> Bool {

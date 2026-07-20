@@ -46,11 +46,17 @@ struct MainTabView: View {
             OfflineVerificationView(service: service, store: store)
                 .tabItem { Label("Offline", systemImage: "airplane") }
 
+            HistoryListView(store: store)
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+
             ErrorExplorerView(store: store)
                 .tabItem { Label("Errors", systemImage: "exclamationmark.triangle") }
 
             ExportView(store: store)
                 .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
+
+            AboutView(service: service, store: store)
+                .tabItem { Label("About", systemImage: "questionmark.circle") }
         }
         .preferredColorScheme(store.demoTheme)
     }

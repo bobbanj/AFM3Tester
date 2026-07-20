@@ -39,6 +39,10 @@ flowchart TB
         EC[ErrorClassifier]
         RE[ReportExporter]
         RR[ReportRedactor]
+        TH[TestHistoryStore]
+        RC[RunComparator]
+        GR[GitHubDeviceReportExporter]
+        OSA[OverallStatusAggregator]
     end
 
     MT --> OV & BG & TF
@@ -53,6 +57,10 @@ flowchart TB
     FMS --> EC
     DS --> RE
     RE --> RR
+    DS --> TH
+    TH --> RC
+    DS --> GR
+    DS --> OSA
     TF --> NPM
     OV --> EIP
 ```
@@ -63,9 +71,10 @@ flowchart TB
 | --- | --- |
 | `AFM3TesterApp` | App entry point |
 | `MainTabView` | Tab shell wiring all diagnostic sections |
-| `OverviewView` | Device/model metadata, copy report, run-all |
+| `OverviewView` | Device/model metadata, run-all summary, GitHub report copy |
 | `BasicGenerationView` | Interactive prompt runner with streaming and metrics |
 | `TestFeatureViews.swift` | Structured, tools, memory, multilingual, safety, context, concurrency, benchmark, offline, errors, export |
+| `HistoryViews.swift` | Local history list, run detail, two-run comparison |
 | `DiagnosticUIComponents.swift` | Shared result cards, latency views, layout helpers |
 
 All views are `@MainActor` SwiftUI. Long-running inference is launched with `Task` and reads results back on the main actor.
@@ -101,9 +110,14 @@ The service never fabricates model metadata. It reports `SystemLanguageModel.def
 
 Each runner distinguishes:
 
+- **Passed** — suite logic succeeded
+- **Expected policy block** — intentional side-effect denial without permission (not a failure)
 - **Unavailable** — model/assets not ready
-- **Failed** — test logic or inference failure on an available model
+- **Failed** — unexpected test logic or inference failure on an available model
+- **Skipped** — manual precondition missing (for example offline path still satisfied)
 - **Observation** — behavioral notes, not pass/fail certification
+
+`OverallStatusAggregator` computes a deterministic run-level status. Expected policy blocks never fail a run by themselves. Unavailable models are never presented as successful. Skipped suites are never counted as passed.
 
 ## Tool definitions
 
@@ -116,6 +130,7 @@ Three local tools implement the `Tool` protocol:
 | `setDemoTheme` | Side effect | Updates local demo appearance only when permitted |
 
 Tool arguments use `@Generable` structs defined in `GenerableTypes.swift`.
+`ToolPolicyClassifier` maps `DemoThemeError.sideEffectsNotAllowed` to expected policy enforcement.
 
 ## Permission gating
 
@@ -125,24 +140,29 @@ Side-effect tools are gated by `DemoThemeController.allowSideEffects`, mirrored 
 - Side-effect tools require explicit user intent in the UI.
 - Quoted or retrieved text does not grant permission.
 - Invalid arguments are rejected deterministically in tool code.
+- Policy is never weakened to make a test pass.
 
-## Diagnostic logging
+## Diagnostic logging and local history
 
-`DiagnosticStore` holds:
+`DiagnosticStore` holds live session state (`testResults`, `errorLog`, `benchmarks`, tool logs, offline evidence).
 
-- `testResults`
-- `errorLog`
-- `benchmarks`
-- `toolInvocationLog`
-- `lastSuccessfulInference`
+`TestHistoryStore` persists redacted `DiagnosticRunRecord` values under Application Support:
 
-`ErrorClassifier` maps framework and policy errors into categories such as context limit, rate limit, cancellation, guardrail, and tool failure.
+- Schema versioned (`HistorySchemaVersion.current = 1`)
+- Default retention 50 runs
+- No prompts, no model response bodies by default
+- No iCloud sync, no network access
+- Corrupted files fail-soft (quarantine + empty history)
+
+`RunComparator` compares two stored runs with absolute deltas and percent changes only when mathematically valid, with a visible warning when hardware identifiers differ.
 
 ## Report export and redaction
 
 `ReportExporter` builds a `DiagnosticReport` from live store and device snapshot data, then exports JSON or Markdown.
 
-`ReportRedactor` removes common email, phone, and credential-like patterns unless the user explicitly opts in to include prompt text.
+`GitHubDeviceReportExporter` builds a concise community Markdown report from a history record (or the current store snapshot).
+
+`ReportRedactor` removes common email, phone, and credential-like patterns. Prompt text is excluded unless the user explicitly opts in.
 
 ## Network-path monitoring
 

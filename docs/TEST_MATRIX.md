@@ -12,8 +12,9 @@ This matrix describes the diagnostic areas implemented in AFM3Tester as of the i
 | Support ticket batch | Ten `@Generable` classifications | Automatic | Yes | No | Ten schema-conforming outputs | Does not verify semantic ticket quality |
 | Tool: project status | Model should use `getProjectStatus` | Automatic | Yes | No | Tool invocation or equivalent answer content | Model may answer without tool on some builds |
 | Tool: budget | Model should use `calculateBudget` | Automatic | Yes | No | Tool invocation or correct total | Same as above |
-| Tool: theme side effect | Explicit theme change only | Automatic + UI toggle | Yes | No | Theme changes only with permission | Demonstrates app policy, not model resistance |
-| Tool injection observation | Quoted text must not authorize theme change | Automatic | Yes | No | No new side-effect tool call | Policy enforcement, not security certification |
+| Tool: unauthorized side effect | Deny `setDemoTheme` without permission | Automatic | Yes | No | **Expected policy block** (not failed) | Policy must remain enforced |
+| Tool: authorized side effect | Explicit theme change after permission | Automatic + UI toggle | Yes | No | Theme changes when permitted | Demonstrates app policy, not model resistance |
+| Tool injection observation | Quoted text must not authorize theme change | Automatic | Yes | No | No side-effect without permission | Policy enforcement, not security certification |
 | Conversation memory | Same-session recall of codename | Automatic | Yes | No | Aurora then Borealis recalled | Wording checks are heuristic |
 | Fresh session isolation | New session should not recall codename | Automatic | Yes | No | No prior codename leaked | Heuristic string match |
 | Transcript rehydration | Rehydrated session recalls Borealis | Automatic | Yes | No | Rehydrated session succeeds | In-memory only; not persisted to disk |
@@ -21,22 +22,36 @@ This matrix describes the diagnostic areas implemented in AFM3Tester as of the i
 | Safety observations | Benign prompt-injection scenarios | Automatic observations | Yes | No | Logged behavior notes | Not a security certification |
 | Context window ladder | Recall unique fact at increasing sizes | Automatic | Yes | No | Fact recall until context error | Token counts may be estimated |
 | Concurrency 1/2/2/4 | Conservative parallel request probe | Automatic | Yes | No | At least some successes recorded | Framework may serialize; not proof of hardware parallelism |
-| Benchmark (3 reps) | Streaming latency and device state | Automatic | Yes | No | Benchmark samples stored | Beta observations only |
+| Benchmark (3 reps) | Streaming latency and device state | Automatic | Yes | No | Median/min/max + thermal/battery | Beta observations only; not statistically significant |
 | Offline verification | Inference with no satisfied network path | Manual Airplane Mode + automatic tests | Yes | Must be offline during test | Basic, structured, memory pass while offline | App cannot enable Airplane Mode; Wi‑Fi must be off too |
+| History / compare | Local redacted run storage and deltas | Manual | No | No | Newest-first history; compare two runs | No prompts stored; cross-device percent warning |
 | Error explorer | Preserve full reflected errors | Automatic logging | No for UI; yes for model errors | No | Detailed categorized log | Logs may contain sensitive model output |
 | Export JSON/Markdown | Share redacted diagnostic report | Manual | No | No | Share sheet export | User must review before publishing |
+| GitHub device report | Concise community Markdown | Manual copy | No | No | Redacted observation paste | No prompts/credentials |
 | Embedded unit self-tests | Redaction, validation, tools, gating (Debug UI only) | Manual (Debug) | No | No | Interactive checks pass | Does not test live model inference; not a substitute for XCTest |
-| XCTest (`AFM3TesterTests`) | Deterministic redaction, validation, tools, export, offline evidence | Automatic (`xcodebuild test`) | No | No | Unit tests pass in CI/simulator | Does not test live Foundation Models inference |
+| XCTest (`AFM3TesterTests`) | Deterministic redaction, validation, tools, history, compare, export | Automatic (`xcodebuild test`) | No | No | Unit tests pass in CI/simulator | Does not test live Foundation Models inference |
 
 ## Result semantics
 
 | Outcome | Meaning |
 | --- | --- |
 | Passed | Test logic succeeded on an available model |
-| Failed | Test logic or inference failed while model was available |
+| Expected policy block | Intentional side-effect denial without permission; not a failure |
+| Partial | Some checks passed; incomplete verification (e.g. offline 3/4) without a hard failure |
+| Failed | Unexpected test logic or inference failure while model was available |
 | Unavailable | Model/assets/device prerequisites not met |
 | Skipped | Preconditions missing, such as network still online for offline test |
 | Observation | Behavioral note, especially in safety suite |
+
+### Overall run aggregation
+
+1. Any failed suite → overall **Failed**
+2. Else all meaningful suites unavailable → overall **Unavailable**
+3. Else mixed unavailable + success → overall **Failed** (not a successful run)
+4. Else any partial → overall **Partial**
+5. Else any passed → overall **Passed**
+6. Else any expected policy block → overall **Expected policy block**
+7. Else only skipped/observation → overall **Skipped**
 
 ## Physical device requirement
 
