@@ -42,6 +42,24 @@ TestFlight builds may be newer than the latest GitHub release. Prefer TestFlight
 - TestFlight beta availability
 - Improved export consistency and redaction for metrics
 
+### Try AFM3Tester
+
+• GitHub
+
+https://github.com/bobbanj/AFM3Tester
+
+• TestFlight
+
+https://testflight.apple.com/join/FJMVaGWC
+
+Supports:
+
+• iPhone
+• iOS 27 Beta
+• Apple Foundation Models
+
+No Xcode required.
+
 ## What it tests
 
 AFM3Tester currently exercises:
