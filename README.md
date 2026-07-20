@@ -260,7 +260,7 @@ Important:
 - Wait for the app to show an offline / no satisfied path state before running Offline Verification.
 - After a completed Offline Verification run, **Device Report** and **History** should show the same outcome (including check counts), not “Not Run”.
 
-Offline Verification has **not** yet been recorded as passed in [docs/OBSERVED_RESULTS.md](docs/OBSERVED_RESULTS.md).
+In the captured physical-device observation, the app reported **Offline (no satisfied path)** and basic generation, structured output, and memory checks succeeded. This establishes only that those tested paths succeeded while the app observed no satisfied network path; it is not absolute proof that every framework or OS path is always offline. See [docs/OBSERVED_RESULTS.md](docs/OBSERVED_RESULTS.md).
 
 ## Privacy
 
@@ -269,8 +269,7 @@ AFM3Tester is designed for local diagnostics:
 - No analytics
 - No telemetry
 - No third-party SDKs
-- No prompts exported by default
-- Diagnostic exports exclude prompt text unless you explicitly enable **Include prompt text in export**
+- Prompt text is not collected or exported by diagnostic reports
 - Redaction attempts to remove email addresses, phone numbers, API keys, tokens, and passwords
 - Latency, versions, hardware identifiers, and similar metrics are not treated as phone numbers
 

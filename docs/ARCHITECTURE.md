@@ -148,7 +148,7 @@ Side-effect tools are gated by `DemoThemeController.allowSideEffects`, mirrored 
 
 `TestHistoryStore` persists redacted `DiagnosticRunRecord` values under Application Support:
 
-- Schema versioned (`HistorySchemaVersion.current = 1`)
+- Schema versioned (`HistorySchemaVersion.current = 3`)
 - Default retention 50 runs
 - No prompts, no model response bodies by default
 - No iCloud sync, no network access
@@ -162,7 +162,7 @@ Side-effect tools are gated by `DemoThemeController.allowSideEffects`, mirrored 
 
 `GitHubDeviceReportExporter` builds a concise community Markdown report from a history record (or the current store snapshot).
 
-`ReportRedactor` removes common email, phone, and credential-like patterns. Prompt text is excluded unless the user explicitly opts in.
+`ReportRedactor` removes common email, phone, and credential-like patterns. Prompt text is not collected or exported.
 
 ## Network-path monitoring
 
