@@ -10,25 +10,29 @@ struct AboutView: View {
     @State private var copiedEnvironment = false
 
     private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.2"
+        AppRelease.marketingVersion
     }
 
     private var appBuild: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "4"
+        AppRelease.buildNumber
     }
 
     var body: some View {
         NavigationStack {
             DiagnosticScrollScreen {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("AFM3Tester")
+                    Text("AFM3 Toolbox")
                         .font(.title.weight(.bold))
-                    Text("Version \(appVersion)")
+                    Text("AFM3Tester")
                         .font(.subheadline)
-                    Text("Build \(appBuild)")
+                        .foregroundStyle(.secondary)
+                    Text("Version \(appVersion) · Build \(appBuild)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
+
+                ScreenIntro(text: "On-device Apple Foundation Models only. No other model providers and no cloud inference.")
 
                 GroupBox("Links") {
                     InfoRow(label: "Repository", value: "https://github.com/bobbanj/AFM3Tester")
@@ -40,6 +44,7 @@ struct AboutView: View {
                     Text("No analytics")
                     Text("No telemetry")
                     Text("No third-party SDKs")
+                    Text("Local toplist only")
                 }
                 .font(.subheadline)
 

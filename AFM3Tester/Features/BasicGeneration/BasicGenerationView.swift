@@ -135,7 +135,7 @@ struct BasicGenerationView: View {
     private enum Field { case prompt, instructions }
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Default Prompts")
                     .font(.headline)

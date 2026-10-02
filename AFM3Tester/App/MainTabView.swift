@@ -1,5 +1,14 @@
 import SwiftUI
 
+enum ToolboxTab: Hashable {
+    case score
+    case toplist
+    case lab
+    case history
+    case tips
+    case about
+}
+
 struct MainTabView: View {
     @State private var store = DiagnosticStore.shared
     @State private var service = FoundationModelService(
@@ -10,53 +19,35 @@ struct MainTabView: View {
             }
         }
     )
+    @State private var tab = ToolboxTab.score
 
     var body: some View {
-        TabView {
-            OverviewView(service: service, store: store)
-                .tabItem { Label("Overview", systemImage: "info.circle") }
+        TabView(selection: $tab) {
+            ScoreHomeView(service: service, store: store) {
+                tab = .history
+            }
+            .tabItem { Label("Score", systemImage: "gauge.with.dots.needle.67percent") }
+            .tag(ToolboxTab.score)
 
-            BasicGenerationView(service: service, store: store)
-                .tabItem { Label("Generate", systemImage: "text.bubble") }
+            ToplistView(store: store)
+                .tabItem { Label("Toplist", systemImage: "list.number") }
+                .tag(ToolboxTab.toplist)
 
-            StructuredOutputView(service: service, store: store)
-                .tabItem { Label("Structured", systemImage: "list.bullet.rectangle") }
-
-            ToolCallingView(service: service, store: store)
-                .tabItem { Label("Tools", systemImage: "wrench.and.screwdriver") }
-
-            ConversationMemoryView(service: service, store: store)
-                .tabItem { Label("Memory", systemImage: "brain") }
-
-            MultilingualView(service: service, store: store)
-                .tabItem { Label("Languages", systemImage: "globe") }
-
-            SafetyTestsView(service: service, store: store)
-                .tabItem { Label("Safety", systemImage: "shield") }
-
-            ContextWindowView(service: service, store: store)
-                .tabItem { Label("Context", systemImage: "doc.text.magnifyingglass") }
-
-            ConcurrencyView(service: service, store: store)
-                .tabItem { Label("Concurrency", systemImage: "arrow.triangle.branch") }
-
-            BenchmarkView(service: service, store: store)
-                .tabItem { Label("Benchmark", systemImage: "gauge.with.dots.needle.67percent") }
-
-            OfflineVerificationView(service: service, store: store)
-                .tabItem { Label("Offline", systemImage: "airplane") }
+            LabHomeView(service: service, store: store)
+                .tabItem { Label("Lab", systemImage: "flask") }
+                .tag(ToolboxTab.lab)
 
             HistoryListView(store: store)
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+                .tag(ToolboxTab.history)
 
-            ErrorExplorerView(store: store)
-                .tabItem { Label("Errors", systemImage: "exclamationmark.triangle") }
-
-            ExportView(store: store)
-                .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
+            TipsView()
+                .tabItem { Label("Tips", systemImage: "lightbulb") }
+                .tag(ToolboxTab.tips)
 
             AboutView(service: service, store: store)
                 .tabItem { Label("About", systemImage: "questionmark.circle") }
+                .tag(ToolboxTab.about)
         }
         .preferredColorScheme(store.demoTheme)
     }

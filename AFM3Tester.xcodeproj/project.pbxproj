@@ -55,6 +55,12 @@
 		B025 /* HistoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025; };
 		B026 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026; };
 		B027 /* OfflineObservationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F027; };
+		B028 /* AppRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028; };
+		B029 /* AFM3Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = F029; };
+		B02A /* ScoreHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02A; };
+		B02B /* ToplistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02B; };
+		B02C /* LabHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02C; };
+		B02D /* TipsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F02D; };
 		B10A /* OverallStatusAggregatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F109; };
 		B10B /* DeviceMarketingNameResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A; };
 		B10C /* TestHistoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10B; };
@@ -63,6 +69,7 @@
 		B10F /* GitHubDeviceReportExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10E; };
 		B110 /* ToolPolicyClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F; };
 		B111 /* OfflineObservationFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F110; };
+		B112 /* AFM3ScoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F111; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,6 +122,13 @@
 		F025 /* HistoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViews.swift; sourceTree = "<group>"; };
 		F026 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		F027 /* OfflineObservationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineObservationFormatter.swift; sourceTree = "<group>"; };
+		F028 /* AppRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelease.swift; sourceTree = "<group>"; };
+		F029 /* AFM3Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFM3Score.swift; sourceTree = "<group>"; };
+		F02A /* ScoreHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreHomeView.swift; sourceTree = "<group>"; };
+		F02B /* ToplistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToplistView.swift; sourceTree = "<group>"; };
+		F02C /* LabHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabHomeView.swift; sourceTree = "<group>"; };
+		F02D /* TipsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TipsView.swift; sourceTree = "<group>"; };
+		F111 /* AFM3ScoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFM3ScoreTests.swift; sourceTree = "<group>"; };
 		F109 /* OverallStatusAggregatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverallStatusAggregatorTests.swift; sourceTree = "<group>"; };
 		F10A /* DeviceMarketingNameResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMarketingNameResolverTests.swift; sourceTree = "<group>"; };
 		F10B /* TestHistoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryStoreTests.swift; sourceTree = "<group>"; };
@@ -225,6 +239,10 @@
 				G00F /* Tests */,
 				G011 /* History */,
 				G012 /* About */,
+				G013 /* Score */,
+				G014 /* Toplist */,
+				G015 /* Lab */,
+				G016 /* Tips */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -270,6 +288,8 @@
 				F023 /* GitHubDeviceReportExporter.swift */,
 				F024 /* DiagnosticRunFactory.swift */,
 				F027 /* OfflineObservationFormatter.swift */,
+				F028 /* AppRelease.swift */,
+				F029 /* AFM3Score.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -335,6 +355,7 @@
 				F10E /* GitHubDeviceReportExporterTests.swift */,
 				F10F /* ToolPolicyClassifierTests.swift */,
 				F110 /* OfflineObservationFormatterTests.swift */,
+				F111 /* AFM3ScoreTests.swift */,
 			);
 			path = AFM3TesterTests;
 			sourceTree = "<group>";
@@ -353,6 +374,38 @@
 				F026 /* AboutView.swift */,
 			);
 			path = About;
+			sourceTree = "<group>";
+		};
+		G013 /* Score */ = {
+			isa = PBXGroup;
+			children = (
+				F02A /* ScoreHomeView.swift */,
+			);
+			path = Score;
+			sourceTree = "<group>";
+		};
+		G014 /* Toplist */ = {
+			isa = PBXGroup;
+			children = (
+				F02B /* ToplistView.swift */,
+			);
+			path = Toplist;
+			sourceTree = "<group>";
+		};
+		G015 /* Lab */ = {
+			isa = PBXGroup;
+			children = (
+				F02C /* LabHomeView.swift */,
+			);
+			path = Lab;
+			sourceTree = "<group>";
+		};
+		G016 /* Tips */ = {
+			isa = PBXGroup;
+			children = (
+				F02D /* TipsView.swift */,
+			);
+			path = Tips;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -463,6 +516,7 @@
 				B10F /* GitHubDeviceReportExporterTests.swift in Sources */,
 				B110 /* ToolPolicyClassifierTests.swift in Sources */,
 				B111 /* OfflineObservationFormatterTests.swift in Sources */,
+				B112 /* AFM3ScoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -502,6 +556,12 @@
 				B025 /* HistoryViews.swift in Sources */,
 				B026 /* AboutView.swift in Sources */,
 				B027 /* OfflineObservationFormatter.swift in Sources */,
+				B028 /* AppRelease.swift in Sources */,
+				B029 /* AFM3Score.swift in Sources */,
+				B02A /* ScoreHomeView.swift in Sources */,
+				B02B /* ToplistView.swift in Sources */,
+				B02C /* LabHomeView.swift in Sources */,
+				B02D /* TipsView.swift in Sources */,
 				B013 /* DiagnosticUIComponents.swift in Sources */,
 				B014 /* OverviewView.swift in Sources */,
 				B015 /* BasicGenerationView.swift in Sources */,
@@ -526,11 +586,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = AFM3Tester;
+				INFOPLIST_KEY_CFBundleDisplayName = "AFM3 Toolbox";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -541,7 +601,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3Tester;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -560,11 +620,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = AFM3Tester;
+				INFOPLIST_KEY_CFBundleDisplayName = "AFM3 Toolbox";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -575,7 +635,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3Tester;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -594,7 +654,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -603,7 +663,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3TesterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -620,7 +680,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -629,7 +689,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.2.2;
+				MARKETING_VERSION = 0.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.AFM3TesterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

@@ -6,11 +6,11 @@
 [![iOS 27](https://img.shields.io/badge/iOS-27-lightgrey.svg)](https://developer.apple.com/ios/)
 [![TestFlight](https://img.shields.io/badge/TestFlight-Public_Beta-blue.svg)](https://testflight.apple.com/join/FJMVaGWC)
 
-**AFM3Tester — Apple Foundation Models Diagnostic Suite**
+**AFM3Tester — an AFM3 Toolbox for on-device Apple Foundation Models**
 
-AFM3Tester is an open-source SwiftUI diagnostic and capability test suite for Apple’s public **Foundation Models** framework on supported physical iPhones running **iOS 27**.
+AFM3Tester is an open-source SwiftUI toolbox for Apple’s public **Foundation Models** framework on supported physical iPhones running **iOS 27**. It is a local, Geekbench-style loop for **SystemLanguageModel** only: a fixed AFM3 Score, sub-scores, a device toplist kept in History, and the existing Lab suites.
 
-It helps developers observe on-device `SystemLanguageModel` **Availability**, run structured diagnostics, inspect errors faithfully, and export redacted **Device Report** Markdown — without third-party SDKs, network-backed model providers, analytics, or telemetry.
+It does not call other model providers, does not do cloud inference, and does not ship analytics or telemetry SDKs. Scores stay on the iPhone unless you copy a redacted score card or Device Report yourself.
 
 > **Observed result:** Verified on a physical iPhone in Sweden running iOS 27 beta: `SystemLanguageModel.default` was **Available** and executed **On-Device**. This is a recorded test observation, not a universal guarantee for all devices, regions, or future OS builds.
 
@@ -32,15 +32,16 @@ Requirements:
 
 TestFlight builds may be newer than the latest GitHub release. Prefer TestFlight when you want the most recent release-polish package; use GitHub when you need source, issues, and contribution history.
 
-## What's New in 0.2.2
+## What's New in 0.3.0
 
-- Offline Verification reporting improvements (Device Report / History stay consistent with UI)
-- Correct Expected Policy Event reporting (separate from Errors)
-- Local run History
-- Compare Runs
-- Community Device Reports via **Copy GitHub Device Report**
-- TestFlight beta availability
-- Improved export consistency and redaction for metrics
+- AFM3 Score from fixed suite `afm3-score-suite-1`, with Latency, Throughput, Responsiveness, and Capability sub-scores
+- Local toplist from History (this device by default; other suite versions are not ranked together)
+- Redacted score card Markdown
+- Compare Runs says when two scores are the same device and the same suite version
+- Tips & tricks, and a Lab tab for the existing diagnostic suites
+- Home screen name **AFM3 Toolbox**
+
+0.2.2 History, Compare Runs, and Device Report behavior is unchanged in spirit and listed in [CHANGELOG.md](CHANGELOG.md).
 
 ### Try AFM3Tester
 
@@ -148,9 +149,10 @@ You do not need a paid Apple Developer Program membership to inspect UI in Simul
 1. Open https://testflight.apple.com/join/FJMVaGWC on your iPhone.
 2. Install AFM3Tester from TestFlight.
 3. Wait for Apple Intelligence / Foundation Models assets to finish downloading.
-4. On **Overview**, confirm **Availability** and the public `contextSize` value.
-5. Tap **Run All Safe Tests** on a physical device.
-6. Optionally run **Offline Verification** (Airplane Mode), then **Copy GitHub Device Report**.
+4. On **Score**, confirm **Availability**.
+5. Tap **Run AFM3 Score** on a physical device. When it finishes, read the composite and sub-scores, then **Copy Score Card** if you want to share the redacted summary.
+6. Open **Toplist** for this device’s local ranking, and **History** to select two runs and **Compare**.
+7. Use **Tips** before Offline Verification or a GitHub Device Report. Lab → Overview still has **Copy GitHub Device Report**.
 
 ### Build from Source
 
@@ -176,9 +178,10 @@ You do not need a paid Apple Developer Program membership to inspect UI in Simul
 9. Select the physical iPhone as the run destination.
 10. Build and run.
 11. Wait for Apple Intelligence / Foundation Models assets to finish downloading on the device.
-12. On **Overview**, confirm framework Availability and the public `contextSize` value.
-13. Tap **Run All Safe Tests** on a physical device to exercise inference paths.
-14. For Offline Verification, manually enable **Airplane Mode**, disable Wi‑Fi if it remains active, confirm the app reports no satisfied network path, then run **Offline Verification** and export the Device Report.
+12. On **Score**, confirm framework Availability.
+13. Tap **Run AFM3 Score** on a physical device. Simulator can show the UI and will not produce a real score.
+14. Open **Toplist** and **History → Compare Runs**. Percent change for the AFM3 Score is shown when the device and the suite version match.
+15. For Offline Verification, open **Tips**, then Lab → Offline. Manually enable **Airplane Mode**, disable Wi‑Fi if it remains active, confirm the app reports no satisfied network path, run **Offline Verification**, and export the Device Report. Offline Verification is not part of the AFM3 Score.
 
 ## Physical device testing checklist
 
@@ -201,7 +204,7 @@ Simulator builds can compile and display UI, but **Foundation Models inference i
 ## Community Device Reports
 
 1. Run diagnostics on a supported physical iPhone.
-2. On **Overview**, **Export**, or **History**, tap **Copy GitHub Device Report**.
+2. On **Lab → Overview**, **Lab → Export**, or **History**, tap **Copy GitHub Device Report**. Use **Copy Score Card** on **Score** or **History** when you only want the AFM3 Score.
 3. Open a [Community Device Report](https://github.com/bobbanj/AFM3Tester/issues/new?template=device_report.yml) issue.
 4. Paste the Markdown from **Copy GitHub Device Report** and confirm the privacy checkbox (no prompts or credentials).
 
@@ -221,21 +224,24 @@ Embedded debug self-tests on the Overview tab (Debug builds only) are interactiv
 
 | Tab / area | What it proves |
 | --- | --- |
-| Overview | Device marketing name + hardware ID, Availability, context size, run-all summary, Device Report copy |
-| Generate | Interactive basic and streaming generation, temperature, deterministic seed, latency metrics |
-| Structured | `@Generable` decoding for meeting summaries and support ticket batches |
-| Tools | Read-only tools, deterministic budget tool, Expected Policy Event, authorized side-effect, quoted-content isolation |
-| Memory | Same-session recall, fresh-session isolation, in-memory transcript rehydration |
-| Languages | Compact generation across five languages with automatic heuristics and manual quality ratings |
-| Safety | Benign prompt-injection observations — not a security certification |
-| Context | Synthetic long-context recall until context-limit errors |
-| Concurrency | Conservative 1 / 2 sequential / 2 concurrent / 4 concurrent probes |
-| Benchmark | Three streaming repetitions with median/min/max summaries |
-| Offline Verification | Evidence that tested inference paths can run with no active network route |
-| History | Local redacted run History and Compare Runs |
-| Errors | Unexpected errors plus Expected Policy Events |
-| Export | Redacted JSON/Markdown + Device Report |
-| About | Version/build, GitHub, TestFlight, environment summary |
+| Score | Fixed-suite AFM3 Score, sub-scores, and a redacted score card |
+| Toplist | Local ranking from History for the current suite version |
+| Lab → Overview | Device marketing name + hardware ID, Availability, context size, run-all summary, Device Report copy |
+| Lab → Generate | Interactive basic and streaming generation, temperature, deterministic seed, latency metrics |
+| Lab → Structured | `@Generable` decoding for meeting summaries and support ticket batches |
+| Lab → Tools | Read-only tools, deterministic budget tool, Expected Policy Event, authorized side-effect, quoted-content isolation |
+| Lab → Memory | Same-session recall, fresh-session isolation, in-memory transcript rehydration |
+| Lab → Languages | Compact generation across five languages with automatic heuristics and manual quality ratings |
+| Lab → Safety | Benign prompt-injection observations — not a security certification |
+| Lab → Context | Synthetic long-context recall until context-limit errors |
+| Lab → Concurrency | Conservative 1 / 2 sequential / 2 concurrent / 4 concurrent probes |
+| Lab → Benchmark | Three streaming repetitions with median/min/max summaries used by the score |
+| Lab → Offline Verification | Evidence that tested inference paths can run with no active network route. Not part of the score |
+| History | Local redacted run History and Compare Runs, including same-device / same-suite-version score honesty |
+| Lab → Errors | Unexpected errors plus Expected Policy Events |
+| Lab → Export | Redacted JSON/Markdown + Device Report |
+| Tips | Bundled notes for Airplane Mode, assets, Simulator, policy events, thermals, and Device Report paste |
+| About | Version/build, GitHub, TestFlight, environment summary, local-only privacy |
 
 ### Wording that matters
 
@@ -245,8 +251,10 @@ Embedded debug self-tests on the Overview tab (Debug builds only) are interactiv
 - **Tool-call blocking** demonstrates application policy enforcement, not guaranteed model resistance to prompt injection.
 - **Concurrency success** does not prove hardware inference was physically parallel; the framework may serialize work.
 - **Character throughput** is not token throughput; estimated tokens/sec are labeled estimates.
+- **AFM3 Score** uses calibration baselines where 1000 is the reference for suite `afm3-score-suite-1`. It is not an official Apple number and it is not statistically significant.
+- **Toplist** entries are comparable when the device and the score suite version match. Other suite versions are listed apart and are not ranked together.
 - **Beta benchmarks** are not official Apple performance numbers and are not statistically significant.
-- **Compare Runs** across different device models shows a visible warning before interpreting percent changes.
+- **Compare Runs** hides the AFM3 Score percent change unless both runs are complete, from the same device, and from the same suite version. Different device models still show a warning.
 
 More detail: [docs/TEST_MATRIX.md](docs/TEST_MATRIX.md).
 
@@ -287,7 +295,8 @@ AFM3Tester is designed for local diagnostics:
 - No analytics
 - No telemetry
 - No third-party SDKs
-- Prompt text is not collected or exported by diagnostic reports
+- No cloud scoreboard. The toplist is History on this iPhone
+- Prompt text is not collected or exported by diagnostic reports or score cards
 - Redaction attempts to remove email addresses, phone numbers, API keys, tokens, and passwords
 - Latency, versions, hardware identifiers, and similar metrics are not treated as phone numbers
 
@@ -341,4 +350,5 @@ Results in this repository are observations from beta software and may change.
 - [CHANGELOG.md](CHANGELOG.md)
 - [docs/OBSERVED_RESULTS.md](docs/OBSERVED_RESULTS.md)
 - [docs/RELEASE_SCREENSHOT_CHECKLIST.md](docs/RELEASE_SCREENSHOT_CHECKLIST.md)
+- [docs/APP_STORE_READINESS.md](docs/APP_STORE_READINESS.md)
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

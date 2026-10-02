@@ -6,7 +6,7 @@ enum ReportExporter: Sendable {
     @MainActor
     static func buildReport(from store: DiagnosticStore) -> DiagnosticReport {
         let model = SystemLanguageModel.default
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.2"
+        let appVersion = AppRelease.marketingVersion
 
         return DiagnosticReport(
             appVersion: appVersion,

@@ -11,7 +11,7 @@ struct StructuredOutputView: View {
     @State private var lastResult: TestResult?
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Guided generation using @Generable types: MeetingSummary and SupportTicketClassification.")
                     .font(.subheadline)
@@ -53,7 +53,7 @@ struct ToolCallingView: View {
     @State private var allowSideEffects = false
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Local tools only: getProjectStatus, calculateBudget, setDemoTheme. Denied side effects are expected policy enforcement, not suite failures.")
                     .font(.subheadline)
@@ -110,7 +110,7 @@ struct ConversationMemoryView: View {
     @State private var transcriptDump = ""
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Multi-turn session memory and transcript rehydration (in-memory only, not persisted to disk).")
                     .font(.subheadline)
@@ -151,7 +151,7 @@ struct MultilingualView: View {
     @State private var ratings: [String: ManualQualityRating] = [:]
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Automatic checks measure non-empty output, length, and timing — not linguistic quality.")
                     .font(.caption)
@@ -202,7 +202,7 @@ struct SafetyTestsView: View {
     @State private var lastResult: TestResult?
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Label(
                     "Behavioral observations only — not a security certification.",
@@ -236,7 +236,7 @@ struct ContextWindowView: View {
     @State private var lastResult: TestResult?
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Token counts are estimates (~4 characters per token) unless the SDK returns an official tokenCount. Stops safely on context-size errors.")
                     .font(.caption)
@@ -267,7 +267,7 @@ struct ConcurrencyView: View {
     @State private var lastResult: TestResult?
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Tests 1, 2 sequential, 2 concurrent, and 4 concurrent requests (max 4). Records thermal and battery state.")
                     .font(.caption)
@@ -297,8 +297,9 @@ struct BenchmarkView: View {
     @State private var isRunning = false
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
+                ScreenIntro(text: "Three streaming repetitions. Median latency, time to first streamed content, and estimated tokens/sec feed the AFM3 Score when you run the full suite.")
                 Label(
                     "Benchmark results are beta-software observations on this device and are not an official measure of model capability. Not statistically significant.",
                     systemImage: "exclamationmark.triangle"
@@ -407,7 +408,7 @@ struct OfflineVerificationView: View {
     @State private var lastResult: TestResult?
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 GroupBox("Instructions") {
                     Text("""
@@ -494,7 +495,7 @@ struct ErrorExplorerView: View {
     let store: DiagnosticStore
 
     var body: some View {
-        NavigationStack {
+        Group {
             List {
                 Section {
                     Text("Unexpected runtime failures stay in Errors. Intentional policy denials are listed separately as Expected Policy Events.")
@@ -575,7 +576,7 @@ struct ExportView: View {
     @State private var markdown = ""
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
                 Text("Sensitive patterns (emails, phones, API keys) are redacted automatically. Prompt text is not collected or exported.")
                     .font(.caption)

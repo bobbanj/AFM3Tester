@@ -84,6 +84,21 @@ enum GitHubDeviceReportExporter: Sendable {
             }
         }
         lines.append("")
+        lines.append("### AFM3 Score")
+        lines.append("")
+        let score = AFM3ScoreCalculator.resolve(run)
+        if score.isComplete, let composite = score.composite {
+            lines.append("- Composite: \(composite)")
+            lines.append("- Suite: \(score.suiteIdentifier) (v\(score.suiteVersion))")
+            for sub in score.subScores {
+                lines.append("- \(sub.title): \(sub.value.map(String.init) ?? "n/a")")
+            }
+            lines.append("- \(AFM3ScoreSuite.honestyNote)")
+            lines.append("- Not an official Apple score. Not statistically significant.")
+        } else {
+            lines.append("_AFM3 Score incomplete for \(score.suiteIdentifier)._")
+        }
+        lines.append("")
         lines.append("### Disclaimer")
         lines.append("")
         lines.append("This report excludes prompts, full model outputs, Apple IDs, Team IDs, emails, phone numbers, UDIDs, and credentials. Values are observations from beta software and may change.")

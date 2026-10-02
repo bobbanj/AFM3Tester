@@ -13,9 +13,7 @@ struct HistoryListView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Beta-software observations from this device and build.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    ScreenIntro(text: "Local History on this device. Select two runs to compare. \(AFM3ScoreSuite.honestyNote)")
                     if let error = history.lastLoadError {
                         Text(error)
                             .font(.caption2)
@@ -25,8 +23,11 @@ struct HistoryListView: View {
 
                 Section("Runs") {
                     if history.runs.isEmpty {
-                        Text("No local history yet. Run All Safe Tests to create a record.")
-                            .foregroundStyle(.secondary)
+                        EmptyStateView(
+                            systemImage: "clock.arrow.circlepath",
+                            title: "No local history yet",
+                            message: "Run AFM3 Score on a physical iPhone. Records stay in Application Support on this device."
+                        )
                     } else {
                         ForEach(history.runs) { run in
                             NavigationLink {
@@ -109,6 +110,11 @@ struct HistoryRowView: View {
             }
             Text("\(run.marketingName) · \(run.hardwareIdentifier)")
                 .font(.caption)
+            if let composite = AFM3ScoreCalculator.resolve(run).composite {
+                Text("AFM3 Score \(composite)")
+                    .font(.caption.weight(.semibold))
+                    .monospacedDigit()
+            }
             Text("OS \(run.osVersion) (\(run.osBuild))")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -135,6 +141,19 @@ struct HistoryDetailView: View {
             Text("Beta-software observations from this device and build.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            let resolvedScore = AFM3ScoreCalculator.resolve(run)
+            GroupBox("AFM3 Score") {
+                InfoRow(label: "Composite", value: resolvedScore.composite.map(String.init) ?? "Incomplete")
+                InfoRow(label: "Suite", value: "\(resolvedScore.suiteIdentifier) v\(resolvedScore.suiteVersion)")
+                InfoRow(label: "Provenance", value: resolvedScore.provenance.rawValue)
+                ForEach(resolvedScore.subScores) { sub in
+                    SubScoreRow(title: sub.title, value: sub.value, detail: sub.detail)
+                }
+                Text(AFM3ScoreSuite.honestyNote)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
 
             GroupBox("Run") {
                 InfoRow(label: "When", value: run.timestamp.formatted(date: .complete, time: .standard))
@@ -218,10 +237,15 @@ struct HistoryDetailView: View {
                 }
             }
 
+            Button("Copy Score Card") {
+                UIPasteboard.general.string = AFM3ScoreCard.makeMarkdown(from: run)
+            }
+            .buttonStyle(.borderedProminent)
+
             Button("Copy GitHub Device Report") {
                 UIPasteboard.general.string = GitHubDeviceReportExporter.makeMarkdown(from: run)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
         }
         .navigationTitle("Run Detail")
     }
@@ -245,6 +269,23 @@ struct CompareRunsView: View {
             Text("Comparison is observational only. Do not claim statistical significance.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            GroupBox("Score honesty") {
+                InfoRow(label: "Same device", value: comparison.deviceChanged ? "no" : "yes")
+                InfoRow(
+                    label: "Suite version",
+                    value: "v\(comparison.leftSuiteVersion.map(String.init) ?? "n/a") → v\(comparison.rightSuiteVersion.map(String.init) ?? "n/a")"
+                )
+                InfoRow(label: "Same suite", value: comparison.sameSuiteVersion ? "yes" : "no")
+                InfoRow(label: "Scores comparable", value: comparison.scoresComparable ? "yes" : "no")
+                InfoRow(
+                    label: "AFM3 Score",
+                    value: "\(comparison.leftCompositeScore.map(String.init) ?? "n/a") → \(comparison.rightCompositeScore.map(String.init) ?? "n/a")"
+                )
+                Text(comparison.scoreHonestyNote)
+                    .font(.caption)
+                    .foregroundStyle(comparison.scoresComparable ? .secondary : .orange)
+            }
 
             if let warning = comparison.crossDeviceWarning {
                 Label(warning, systemImage: "exclamationmark.triangle.fill")

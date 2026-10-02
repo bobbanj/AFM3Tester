@@ -4,7 +4,8 @@ import Foundation
 enum HistorySchemaVersion: Sendable {
     /// v2 adds policyEventSummaries (decoded with default [] for older records).
     /// v3 adds offline check counts / completion timestamp for Device Report consistency.
-    nonisolated static let current = 3
+    /// v4 adds an optional AFM3 Score snapshot. Older records decode with a nil score and can be derived.
+    nonisolated static let current = 4
 }
 
 /// Concise per-suite summary stored in local history (no prompts or model bodies).
@@ -70,6 +71,8 @@ struct DiagnosticRunRecord: Codable, Sendable, Identifiable, Hashable {
     let errorSummaries: [StoredErrorSummary]
     let policyEventSummaries: [StoredPolicyEventSummary]
     let isSimulator: Bool
+    /// Present for runs saved by 0.3 and later. Older history derives a score at read time.
+    let afm3Score: AFM3ScoreSnapshot?
 
     nonisolated init(
         schemaVersion: Int = HistorySchemaVersion.current,
@@ -103,7 +106,8 @@ struct DiagnosticRunRecord: Codable, Sendable, Identifiable, Hashable {
         offlineCompletedAt: Date? = nil,
         errorSummaries: [StoredErrorSummary],
         policyEventSummaries: [StoredPolicyEventSummary] = [],
-        isSimulator: Bool
+        isSimulator: Bool,
+        afm3Score: AFM3ScoreSnapshot? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.id = id
@@ -137,6 +141,7 @@ struct DiagnosticRunRecord: Codable, Sendable, Identifiable, Hashable {
         self.errorSummaries = errorSummaries
         self.policyEventSummaries = policyEventSummaries
         self.isSimulator = isSimulator
+        self.afm3Score = afm3Score
     }
 
     nonisolated init(from decoder: Decoder) throws {
@@ -173,6 +178,44 @@ struct DiagnosticRunRecord: Codable, Sendable, Identifiable, Hashable {
         errorSummaries = try c.decodeIfPresent([StoredErrorSummary].self, forKey: .errorSummaries) ?? []
         policyEventSummaries = try c.decodeIfPresent([StoredPolicyEventSummary].self, forKey: .policyEventSummaries) ?? []
         isSimulator = try c.decode(Bool.self, forKey: .isSimulator)
+        afm3Score = try c.decodeIfPresent(AFM3ScoreSnapshot.self, forKey: .afm3Score)
+    }
+
+    nonisolated func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(schemaVersion, forKey: .schemaVersion)
+        try c.encode(id, forKey: .id)
+        try c.encode(timestamp, forKey: .timestamp)
+        try c.encode(appVersion, forKey: .appVersion)
+        try c.encode(appBuild, forKey: .appBuild)
+        try c.encode(osVersion, forKey: .osVersion)
+        try c.encode(osBuild, forKey: .osBuild)
+        try c.encode(hardwareIdentifier, forKey: .hardwareIdentifier)
+        try c.encode(marketingName, forKey: .marketingName)
+        try c.encode(localeIdentifier, forKey: .localeIdentifier)
+        try c.encode(languageCode, forKey: .languageCode)
+        try c.encode(regionCode, forKey: .regionCode)
+        try c.encode(modelAPIIdentifier, forKey: .modelAPIIdentifier)
+        try c.encode(availability, forKey: .availability)
+        try c.encode(deploymentObservation, forKey: .deploymentObservation)
+        try c.encodeIfPresent(contextSize, forKey: .contextSize)
+        try c.encode(overallStatus, forKey: .overallStatus)
+        try c.encode(overallSummary, forKey: .overallSummary)
+        try c.encode(suiteResults, forKey: .suiteResults)
+        try c.encodeIfPresent(benchmarkSummary, forKey: .benchmarkSummary)
+        try c.encodeIfPresent(thermalState, forKey: .thermalState)
+        try c.encodeIfPresent(batteryPercentage, forKey: .batteryPercentage)
+        try c.encodeIfPresent(isCharging, forKey: .isCharging)
+        try c.encodeIfPresent(isLowPowerModeEnabled, forKey: .isLowPowerModeEnabled)
+        try c.encodeIfPresent(offlinePathObserved, forKey: .offlinePathObserved)
+        try c.encodeIfPresent(offlineOutcome, forKey: .offlineOutcome)
+        try c.encodeIfPresent(offlineChecksPassed, forKey: .offlineChecksPassed)
+        try c.encodeIfPresent(offlineChecksTotal, forKey: .offlineChecksTotal)
+        try c.encodeIfPresent(offlineCompletedAt, forKey: .offlineCompletedAt)
+        try c.encode(errorSummaries, forKey: .errorSummaries)
+        try c.encode(policyEventSummaries, forKey: .policyEventSummaries)
+        try c.encode(isSimulator, forKey: .isSimulator)
+        try c.encodeIfPresent(afm3Score, forKey: .afm3Score)
     }
 }
 
