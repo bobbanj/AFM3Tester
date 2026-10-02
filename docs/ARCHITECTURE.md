@@ -70,7 +70,11 @@ flowchart TB
 | Component | Role |
 | --- | --- |
 | `AFM3TesterApp` | App entry point |
-| `MainTabView` | Tab shell wiring all diagnostic sections |
+| `MainTabView` | Score, Toplist, Lab, History, Tips, and About |
+| `ScoreHomeView` | AFM3 Score, sub-scores, run suite, score card |
+| `ToplistView` | Local ranking derived from History |
+| `LabHomeView` | Existing diagnostic suites in one list |
+| `TipsView` | Bundled tips, no network |
 | `OverviewView` | Device/model metadata, run-all summary, GitHub report copy |
 | `BasicGenerationView` | Interactive prompt runner with streaming and metrics |
 | `TestFeatureViews.swift` | Structured, tools, memory, multilingual, safety, context, concurrency, benchmark, offline, errors, export |
@@ -148,13 +152,18 @@ Side-effect tools are gated by `DemoThemeController.allowSideEffects`, mirrored 
 
 `TestHistoryStore` persists redacted `DiagnosticRunRecord` values under Application Support:
 
-- Schema versioned (`HistorySchemaVersion.current = 3`)
+- Schema versioned (`HistorySchemaVersion.current = 4`)
+- v4 adds an optional `afm3Score` snapshot. Older records decode with nil and can be derived
 - Default retention 50 runs
 - No prompts, no model response bodies by default
 - No iCloud sync, no network access
 - Corrupted files fail-soft (quarantine + empty history)
 
-`RunComparator` compares two stored runs with absolute deltas and percent changes only when mathematically valid, with a visible warning when hardware identifiers differ.
+`AFM3ScoreCalculator` turns a stored run into suite `afm3-score-suite-1`. The composite is the geometric mean of Latency, Throughput, Responsiveness, and Capability. 1000 matches the documented calibration baselines. Offline Verification is not a score member. Expected Policy Events and Safety observations count as full capability credit. Unavailable or skipped members leave the composite incomplete.
+
+`AFM3ToplistBuilder` ranks complete current-suite scores from History. Other suite versions stay in a separate list. The toplist is not uploaded.
+
+`RunComparator` compares two stored runs with absolute deltas and percent changes only when mathematically valid. AFM3 Score percent change is shown only when both scores are complete, the hardware identifier matches, and the suite version matches. A different device still shows a warning.
 
 ## Report export and redaction
 
@@ -179,7 +188,7 @@ The app does not toggle Airplane Mode and does not perform hidden network reques
 - Deterministic tool outputs
 - Side-effect permission gating
 
-These run from the Overview tab and do not invoke the on-device model.
+These run from Lab → Overview and do not invoke the on-device model.
 
 ## Concurrency model
 
@@ -201,9 +210,14 @@ AFM3Tester/
 │   └── Tools/
 ├── Features/
 │   ├── BasicGeneration/
+│   ├── History/
+│   ├── Lab/
 │   ├── Overview/
+│   ├── Score/
 │   ├── Shared/
-│   └── Tests/
+│   ├── Tests/
+│   ├── Tips/
+│   └── Toplist/
 └── Resources/
 ```
 

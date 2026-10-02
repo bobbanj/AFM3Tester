@@ -24,7 +24,10 @@ This matrix describes the diagnostic areas implemented in AFM3Tester as of the i
 | Concurrency 1/2/2/4 | Conservative parallel request probe | Automatic | Yes | No | At least some successes recorded | Framework may serialize; not proof of hardware parallelism |
 | Benchmark (3 reps) | Streaming latency and device state | Automatic | Yes | No | Median/min/max + thermal/battery | Beta observations only; not statistically significant |
 | Offline verification | Inference with no satisfied network path | Manual Airplane Mode + automatic tests | Yes | Must be offline during test | Basic, structured, memory pass while offline | App cannot enable Airplane Mode; Wi‑Fi must be off too |
-| History / compare | Local redacted run storage and deltas | Manual | No | No | Newest-first history; compare two runs | No prompts stored; cross-device percent warning |
+| AFM3 Score | Composite and sub-scores from fixed suite `afm3-score-suite-1` | Automatic after Run AFM3 Score | Yes | No | Complete score when every required suite passed and the benchmark produced metrics | Calibration baseline 1000. Not an Apple score. Not statistically significant. Offline Verification is excluded |
+| Toplist | Rank complete History scores for the current suite version | Automatic from History | No | No | This device by default; other suite versions listed apart | Local only. No upload |
+| Tips | Bundled Airplane Mode, assets, Simulator, policy, thermal, and Device Report notes | Manual reading | No | No | Offline content matches the in-app catalog | Not downloaded |
+| History / compare | Local redacted run storage and deltas | Manual | No | No | Newest-first history; compare two runs | No prompts stored. AFM3 Score percent only for the same device and same suite version |
 | Error explorer | Preserve full reflected errors | Automatic logging | No for UI; yes for model errors | No | Detailed categorized log | Logs may contain sensitive model output |
 | Export JSON/Markdown | Share redacted diagnostic report | Manual | No | No | Share sheet export | User must review before publishing |
 | GitHub device report | Concise community Markdown | Manual copy | No | No | Redacted observation paste | No prompts/credentials |

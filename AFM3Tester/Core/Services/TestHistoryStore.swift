@@ -97,7 +97,8 @@ final class TestHistoryStore {
                 offlineCompletedAt: record.offlineCompletedAt,
                 errorSummaries: record.errorSummaries,
                 policyEventSummaries: record.policyEventSummaries,
-                isSimulator: record.isSimulator
+                isSimulator: record.isSimulator,
+                afm3Score: record.afm3Score
             )
         }
         runs.insert(next, at: 0)

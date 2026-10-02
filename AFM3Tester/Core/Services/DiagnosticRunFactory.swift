@@ -13,11 +13,9 @@ enum DiagnosticRunFactory: Sendable {
         let device = DeviceInfoProvider.captureSnapshot()
         let marketing = DeviceMarketingNameResolver.marketingName(forHardwareIdentifier: device.deviceModel)
         let version = appVersion
-            ?? Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-            ?? "0.2.2"
+            ?? AppRelease.marketingVersion
         let build = appBuild
-            ?? Bundle.main.infoDictionary?["CFBundleVersion"] as? String
-            ?? "4"
+            ?? AppRelease.buildNumber
 
         let suiteResults: [StoredSuiteResult] = store.testResults.values.map { result in
             StoredSuiteResult(
@@ -64,6 +62,12 @@ enum DiagnosticRunFactory: Sendable {
             return BenchmarkStatistics.summarize(samples: benchmarkSamples)
         }()
 
+        let score = AFM3ScoreCalculator.makeSnapshot(
+            suiteResults: suiteResults,
+            benchmarkSummary: benchmarkSummary,
+            provenance: .stored
+        )
+
         return DiagnosticRunRecord(
             appVersion: version,
             appBuild: build,
@@ -93,7 +97,8 @@ enum DiagnosticRunFactory: Sendable {
             offlineCompletedAt: offlineSnapshot.completedAt,
             errorSummaries: Array(errorSummaries),
             policyEventSummaries: Array(policySummaries),
-            isSimulator: device.isSimulator
+            isSimulator: device.isSimulator,
+            afm3Score: score
         )
     }
 

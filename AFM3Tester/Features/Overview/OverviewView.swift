@@ -13,8 +13,10 @@ struct OverviewView: View {
     @State private var copiedGitHubReport = false
 
     var body: some View {
-        NavigationStack {
+        Group {
             DiagnosticScrollScreen {
+                ScreenIntro(text: "Device and Foundation Models state for this iPhone. Run the comparable loop from the Score tab.")
+
                 GroupBox("Device & OS") {
                     InfoRow(label: "Marketing name", value: snapshot.marketingName)
                     InfoRow(label: "Hardware ID", value: snapshot.deviceModel)

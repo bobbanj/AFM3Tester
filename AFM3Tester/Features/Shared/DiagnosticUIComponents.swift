@@ -164,13 +164,123 @@ struct DiagnosticScrollScreen<Content: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 content
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollDismissesKeyboard(.interactively)
+        .background(Color(.systemGroupedBackground))
+    }
+}
+
+struct ScreenIntro: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+struct EmptyStateView: View {
+    let systemImage: String
+    let title: String
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 34, weight: .light))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.title3.weight(.semibold))
+                .multilineTextAlignment(.center)
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .padding(.horizontal, 8)
+    }
+}
+
+struct ScoreHeroView: View {
+    let score: Int?
+    let caption: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("AFM3 Score")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Text(score.map(String.init) ?? "—")
+                .font(.system(size: 64, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+                .accessibilityLabel(score.map { "AFM3 Score \($0)" } ?? "AFM3 Score unavailable")
+            Text(caption)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+}
+
+struct SubScoreRow: View {
+    let title: String
+    let value: Int?
+    let detail: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.body.weight(.semibold))
+                Spacer(minLength: 12)
+                Text(value.map(String.init) ?? "—")
+                    .font(.title3.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(value == nil ? .secondary : .primary)
+            }
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct LabRowLabel: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body.weight(.semibold))
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: systemImage)
+                .foregroundStyle(.tint)
+        }
+        .padding(.vertical, 4)
     }
 }
 

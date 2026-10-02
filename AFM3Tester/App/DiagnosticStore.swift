@@ -94,8 +94,8 @@ final class DiagnosticStore: DiagnosticRecording {
 
     func copyEnvironmentSummary(availability: String, contextSize: Int?) -> String {
         let device = DeviceInfoProvider.captureSnapshot()
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.2"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "4"
+        let version = AppRelease.marketingVersion
+        let build = AppRelease.buildNumber
         return """
         AFM3Tester Environment Summary
         Version: \(version)

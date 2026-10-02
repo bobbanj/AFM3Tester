@@ -4,7 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.2.2] - Unreleased (release polish)
+## [0.3.0] - Unreleased (AFM3 Toolbox)
+
+### Added
+
+- AFM3 Score for fixed suite `afm3-score-suite-1`: composite geometric mean plus Latency, Throughput, Responsiveness, and Capability sub-scores
+- Local toplist built from History, with a this-device filter and a separate section for other suite versions
+- Redacted score card Markdown (`Copy Score Card`) with no prompts and no upload
+- Compare Runs states whether two scores are the same device and the same suite version before showing a percent change
+- Tips & tricks for Airplane Mode, assets download, Simulator inference, Expected Policy Events, thermal/charging, and the Device Report paste flow
+- Lab tab that keeps Generate, Structured, Tools, Memory, Languages, Safety, Context, Concurrency, Benchmark, Offline, Overview, Errors, and Export
+- `docs/APP_STORE_READINESS.md` listing owner-provided gaps for a real App Store submission
+
+### Changed
+
+- Marketing version `0.3.0` (build `5`); home screen name AFM3 Toolbox
+- History schema v4 stores an optional AFM3 Score snapshot. Older records still decode, and a missing snapshot is derived at read time
+- Tab bar is Score, Toplist, Lab, History, Tips, and About
+- README positioning describes AFM3Tester as an on-device AFM3 Toolbox
+
+### Notes
+
+- The score is a local calibration against documented baselines (1000). It is not an Apple score and it is not statistically significant
+- Offline Verification stays in Lab and is not part of the score suite
+- The toplist is local-only. An online leaderboard is out of scope
+- Expected Policy Events still do not count as Errors or as failed capability members
+
+## [0.2.2] - Release polish
 
 ### Fixed
 

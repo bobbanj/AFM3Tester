@@ -38,6 +38,14 @@ struct RunComparisonResult: Codable, Sendable, Hashable {
     let thermalRight: String?
     let errorCategoriesLeft: [String]
     let errorCategoriesRight: [String]
+    let leftSuiteVersion: Int?
+    let rightSuiteVersion: Int?
+    let leftCompositeScore: Int?
+    let rightCompositeScore: Int?
+    let sameSuiteVersion: Bool
+    /// True only when both scores are complete, the hardware matches, and the suite version matches.
+    let scoresComparable: Bool
+    let scoreHonestyNote: String
 }
 
 enum RunComparator: Sendable {
@@ -127,6 +135,38 @@ enum RunComparator: Sendable {
             deltas.append(metric("Context size", Double(lc), Double(rc)))
         }
 
+        let leftScore = AFM3ScoreCalculator.resolve(left)
+        let rightScore = AFM3ScoreCalculator.resolve(right)
+        let sameSuite = leftScore.suiteVersion == rightScore.suiteVersion
+        let scoresComparable = !deviceChanged
+            && sameSuite
+            && leftScore.isComplete
+            && rightScore.isComplete
+            && leftScore.composite != nil
+            && rightScore.composite != nil
+        let honesty = scoreHonestyNote(
+            deviceChanged: deviceChanged,
+            sameSuiteVersion: sameSuite,
+            scoresComparable: scoresComparable
+        )
+        let (scorePercent, scorePercentValid) = percentChange(
+            from: leftScore.composite.map(Double.init),
+            to: rightScore.composite.map(Double.init)
+        )
+        deltas.append(
+            MetricDelta(
+                label: "AFM3 Score",
+                left: leftScore.composite.map(Double.init),
+                right: rightScore.composite.map(Double.init),
+                absoluteChange: absoluteChange(
+                    from: leftScore.composite.map(Double.init),
+                    to: rightScore.composite.map(Double.init)
+                ),
+                percentChange: scorePercent,
+                percentChangeValid: scorePercentValid && scoresComparable
+            )
+        )
+
         return RunComparisonResult(
             leftID: left.id,
             rightID: right.id,
@@ -148,7 +188,34 @@ enum RunComparator: Sendable {
             thermalLeft: left.thermalState,
             thermalRight: right.thermalState,
             errorCategoriesLeft: left.errorSummaries.map(\.category.rawValue).sorted(),
-            errorCategoriesRight: right.errorSummaries.map(\.category.rawValue).sorted()
+            errorCategoriesRight: right.errorSummaries.map(\.category.rawValue).sorted(),
+            leftSuiteVersion: leftScore.suiteVersion,
+            rightSuiteVersion: rightScore.suiteVersion,
+            leftCompositeScore: leftScore.composite,
+            rightCompositeScore: rightScore.composite,
+            sameSuiteVersion: sameSuite,
+            scoresComparable: scoresComparable,
+            scoreHonestyNote: honesty
         )
+    }
+
+    nonisolated static func scoreHonestyNote(
+        deviceChanged: Bool,
+        sameSuiteVersion: Bool,
+        scoresComparable: Bool
+    ) -> String {
+        if scoresComparable {
+            return "Same device and same AFM3 Score suite version. The composite percent change is an observation, not a statistically significant result."
+        }
+        if deviceChanged && !sameSuiteVersion {
+            return "Different device and different AFM3 Score suite version. Do not compare these composite scores."
+        }
+        if deviceChanged {
+            return "Different device. AFM3 Scores are not ranked against each other across hardware."
+        }
+        if !sameSuiteVersion {
+            return "Different AFM3 Score suite version. Composite numbers from different suites are not the same benchmark."
+        }
+        return "AFM3 Score is incomplete on at least one run, so the composite numbers are not compared."
     }
 }
